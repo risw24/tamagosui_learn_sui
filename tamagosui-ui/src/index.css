@@ -1,0 +1,265 @@
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Press+Start+2P&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Pixel-perfect Tamagotchi Design System */
+
+@layer base {
+  :root {
+    /* Attractive Retro Gaming Palette */
+    --background: 225 15% 88%;
+    --foreground: 220 25% 8%;
+
+    --card: 210 40% 98%;
+    --card-foreground: 220 25% 8%;
+
+    --popover: 210 40% 98%;
+    --popover-foreground: 220 25% 8%;
+
+    /* Vibrant electric blue for primary actions */
+    --primary: 200 100% 55%;
+    --primary-foreground: 0 0% 100%;
+
+    /* Hot coral pink for secondary actions */
+    --secondary: 340 100% 65%;
+    --secondary-foreground: 0 0% 100%;
+
+    /* Neon green for success states */
+    --success: 140 100% 45%;
+    --success-foreground: 220 25% 8%;
+
+    /* Bright magenta for warnings/energy low */
+    --warning: 320 100% 65%;
+    --warning-foreground: 0 0% 100%;
+
+    /* Soft lavender for muted elements */
+    --muted: 260 20% 85%;
+    --muted-foreground: 260 15% 40%;
+
+    /* Electric purple for special elements */
+    --accent: 280 100% 70%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 100% 65%;
+    --destructive-foreground: 0 0% 100%;
+
+    /* Sharp contrasting borders */
+    --border: 220 25% 25%;
+    --input: 220 25% 25%;
+    --ring: 200 100% 55%;
+
+    --radius: 0px; /* Sharp pixel edges */
+
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+
+  .dark {
+    --background: 220 25% 8%;
+    --foreground: 210 40% 98%;
+
+    --card: 220 20% 12%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 220 20% 12%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 180 100% 60%;
+    --primary-foreground: 220 25% 8%;
+
+    --secondary: 320 100% 70%;
+    --secondary-foreground: 220 25% 8%;
+
+    --success: 120 100% 55%;
+    --success-foreground: 220 25% 8%;
+
+    --warning: 340 100% 70%;
+    --warning-foreground: 220 25% 8%;
+
+    --muted: 220 20% 18%;
+    --muted-foreground: 220 15% 70%;
+
+    --accent: 260 100% 75%;
+    --accent-foreground: 220 25% 8%;
+
+    --destructive: 0 100% 70%;
+    --destructive-foreground: 220 25% 8%;
+
+    --border: 210 40% 98%;
+    --input: 210 40% 98%;
+    --ring: 180 100% 60%;
+
+    --sidebar-background: 240 5.9% 10%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Press Start 2P', 'Orbitron', monospace;
+    image-rendering: pixelated;
+    image-rendering: -moz-crisp-edges;
+    image-rendering: crisp-edges;
+    font-size: 8px;
+    line-height: 1.6;
+  }
+}
+
+@layer components {
+  /* Pixel-perfect Tamagotchi device styling */
+  .tamagotchi-device {
+    @apply relative bg-card border-4 border-foreground;
+    max-width: 400px;
+    margin: 0 auto;
+    aspect-ratio: 3/4;
+    box-shadow: 
+      8px 8px 0px hsl(var(--foreground)),
+      16px 16px 0px hsl(var(--muted));
+  }
+
+  .tamagotchi-screen {
+    @apply bg-background border-4 border-foreground m-4 p-4 relative;
+    min-height: 300px;
+    box-shadow: inset 4px 4px 0px hsl(var(--muted));
+  }
+
+  /* Pixel buttons */
+  .pixel-button {
+    @apply border-4 border-foreground bg-card hover:bg-muted active:translate-x-1 active:translate-y-1 transition-all duration-75;
+    @apply font-bold text-xs tracking-widest uppercase;
+    min-width: 80px;
+    min-height: 40px;
+    font-family: 'Press Start 2P', monospace;
+    box-shadow: 4px 4px 0px hsl(var(--foreground));
+  }
+  
+  .pixel-button:active {
+    box-shadow: 2px 2px 0px hsl(var(--foreground));
+  }
+
+  .pixel-button-primary {
+    @apply pixel-button bg-primary text-primary-foreground hover:brightness-110;
+    box-shadow: 4px 4px 0px hsl(var(--primary) / 0.8);
+  }
+  
+  .pixel-button-primary:active {
+    box-shadow: 2px 2px 0px hsl(var(--primary) / 0.8);
+  }
+
+  .pixel-button-secondary {
+    @apply pixel-button bg-secondary text-secondary-foreground hover:brightness-110;
+    box-shadow: 4px 4px 0px hsl(var(--secondary) / 0.8);
+  }
+  
+  .pixel-button-secondary:active {
+    box-shadow: 2px 2px 0px hsl(var(--secondary) / 0.8);
+  }
+
+  .pixel-button-success {
+    @apply pixel-button bg-success text-success-foreground hover:brightness-110;
+    box-shadow: 4px 4px 0px hsl(var(--success) / 0.8);
+  }
+  
+  .pixel-button-success:active {
+    box-shadow: 2px 2px 0px hsl(var(--success) / 0.8);
+  }
+
+  .pixel-button-warning {
+    @apply pixel-button bg-warning text-warning-foreground hover:brightness-110;
+    box-shadow: 4px 4px 0px hsl(var(--warning) / 0.8);
+  }
+  
+  .pixel-button-warning:active {
+    box-shadow: 2px 2px 0px hsl(var(--warning) / 0.8);
+  }
+
+  /* Energy bar styling */
+  .energy-bar {
+    @apply border-4 border-foreground bg-background relative overflow-hidden;
+    height: 24px;
+    box-shadow: inset 2px 2px 0px hsl(var(--muted));
+  }
+
+  .energy-fill {
+    @apply h-full transition-all duration-300;
+  }
+
+  .energy-high {
+    @apply bg-success;
+  }
+
+  .energy-medium {
+    @apply bg-secondary;
+  }
+
+  .energy-low {
+    @apply bg-warning;
+  }
+
+  /* Pet card styling */
+  .pet-card {
+    @apply border-4 border-foreground bg-card hover:bg-muted cursor-pointer transition-all duration-75;
+    @apply p-4 text-center hover:translate-x-1 hover:translate-y-1;
+    box-shadow: 4px 4px 0px hsl(var(--foreground));
+  }
+  
+  .pet-card:hover {
+    box-shadow: 2px 2px 0px hsl(var(--foreground));
+  }
+
+  .pet-card-selected {
+    @apply pet-card bg-primary text-primary-foreground;
+  }
+
+  /* Pixel art styling for images */
+  .pixel-art {
+    image-rendering: pixelated;
+    image-rendering: -moz-crisp-edges;
+    image-rendering: crisp-edges;
+  }
+
+  /* Game stats display */
+  .stat-display {
+    @apply border-4 border-foreground bg-muted p-3 text-xs;
+    font-family: 'Press Start 2P', monospace;
+    box-shadow: inset 2px 2px 0px hsl(var(--background));
+  }
+
+  /* Retro animations */
+  .pixel-bounce {
+    animation: pixelBounce 0.5s ease-in-out;
+  }
+
+  @keyframes pixelBounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+  }
+
+  .pixel-pulse {
+    animation: pixelPulse 1s infinite;
+  }
+
+  @keyframes pixelPulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+  }
+}
