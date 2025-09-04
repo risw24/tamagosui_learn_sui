@@ -2,7 +2,7 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 
 import Providers from "./providers";
 import HomePage from "./pages/home";
-import { Toaster } from "sonner";
+import { Toaster } from "./components/ui/sonner";
 
 const router = createBrowserRouter([
   {
