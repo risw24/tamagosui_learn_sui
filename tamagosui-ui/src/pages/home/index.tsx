@@ -12,7 +12,7 @@ export default function HomePage() {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl">Please connect your wallet</h1>
+          <ConnectButton />
         </div>
       </div>
     );
@@ -37,7 +37,7 @@ export default function HomePage() {
           BLOCKCHAIN PET SIMULATOR
         </p>
       </div>
-      <div className="w-full">
+      <div className="w-full flex items-center">
         {ownedPet ? <PetComponent pet={ownedPet} /> : <AdoptComponent />}
       </div>
     </div>
