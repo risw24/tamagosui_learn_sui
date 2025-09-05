@@ -1,5 +1,5 @@
 import { useQueryOwnedPet } from "@/hooks/useQueryOwnedPet";
-import { useCurrentAccount, ConnectButton } from "@mysten/dapp-kit";
+import { useCurrentAccount } from "@mysten/dapp-kit";
 import AdoptComponent from "./AdoptComponent";
 import PetComponent from "./PetComponent";
 import Header from "@/components/Header";

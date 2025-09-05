@@ -11,6 +11,9 @@ import { Input } from "@/components/ui/input";
 import { useMutateAdoptPet } from "@/hooks/useMutateAdoptPet";
 import { Loader2Icon } from "lucide-react";
 
+const INTIAAL_PET_IMAGE_URL =
+  "https://tan-kind-lizard-741.mypinata.cloud/ipfs/bafkreidkhjpthergw2tcg6u5r344shgi2cdg5afmhgpf5bv34vqfrr7hni";
+
 export default function AdoptComponent() {
   const [petName, setPetName] = useState("");
   const { mutate: mutateAdoptPet, isPending: isAdopting } = useMutateAdoptPet();
@@ -29,7 +32,7 @@ export default function AdoptComponent() {
       <CardContent className="space-y-6">
         <div>
           <img
-            src="/pet.jpeg"
+            src={INTIAAL_PET_IMAGE_URL}
             alt="Your new pet"
             className="w-40 h-40 mx-auto image-rendering-pixelated bg-secondary p-2 border-2 border-primary"
           />
