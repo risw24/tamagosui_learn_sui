@@ -37,7 +37,7 @@ export default function HomePage() {
           BLOCKCHAIN PET SIMULATOR
         </p>
       </div>
-      <div className="w-full flex items-center">
+      <div className="w-full flex items-center justify-center">
         {ownedPet ? <PetComponent pet={ownedPet} /> : <AdoptComponent />}
       </div>
     </div>

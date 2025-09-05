@@ -45,7 +45,7 @@ export default function useMutateCheckAndLevelUp() {
     },
     onSuccess: (response) => {
       toast.success(`Checked pet level successfully! Tx: ${response.digest}`);
-      queryClient.invalidateQueries({ queryKey: queryKeyOwnedPet });
+      queryClient.invalidateQueries({ queryKey: queryKeyOwnedPet() });
     },
     onError: (error) => {
       console.error("Error feeding pet:", error);

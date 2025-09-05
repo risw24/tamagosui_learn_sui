@@ -41,7 +41,7 @@ export default function useMutateMintAccessory() {
     },
     onSuccess: (response) => {
       toast.success(`Accessory minted successfully! Tx: ${response.digest}`);
-      queryClient.invalidateQueries({ queryKey: queryKeyOwnedPet });
+      queryClient.invalidateQueries({ queryKey: queryKeyOwnedPet() });
       queryClient.invalidateQueries({ queryKey: queryKeyOwnedAccessories });
     },
     onError: (error) => {

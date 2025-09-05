@@ -48,7 +48,7 @@ export default function UseMutateEquipAccessory() {
     },
     onSuccess: (response) => {
       toast.success(`Accessory equipped successfully! Tx: ${response.digest}`);
-      queryClient.invalidateQueries({ queryKey: queryKeyOwnedPet });
+      queryClient.invalidateQueries({ queryKey: queryKeyOwnedPet() });
       queryClient.invalidateQueries({ queryKey: queryKeyOwnedAccessories });
       queryClient.invalidateQueries({ queryKey: queryKeyEquippedAccessory });
     },

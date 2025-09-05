@@ -10,53 +10,46 @@ import { toast } from "sonner";
 import { queryKeyOwnedPet } from "./useQueryOwnedPet";
 import { PACKAGE_ID } from "@/constants/contract";
 
-const mutateKeyGiveSugarRush = ["mutate", "give-sugar-rush"];
+const mutateKeyWakeUpPet = ["mutate", "let-pet-sleep"];
 
-type UseMutateGiveSugarRushParams = {
+type UseMutateWakeUpPet = {
   petId: string;
 };
 
-type UseMutateGiveSugarRushProps = {
-  onSuccess?: () => void;
-};
-
-export default function useMutateGiveSugarRush({
-  onSuccess,
-}: UseMutateGiveSugarRushProps = {}) {
+export default function useMutateWakeUpPet() {
   const currentAccount = useCurrentAccount();
   const { mutateAsync: signAndExecute } = useSignAndExecuteTransaction();
   const suiClient = useSuiClient();
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationKey: mutateKeyGiveSugarRush,
-    mutationFn: async ({ petId }: UseMutateGiveSugarRushParams) => {
+    mutationKey: mutateKeyWakeUpPet,
+    mutationFn: async ({ petId }: UseMutateWakeUpPet) => {
       if (!currentAccount) throw new Error("No connected account");
 
       const tx = new Transaction();
       tx.moveCall({
-        target: `${PACKAGE_ID}::tamagosui::give_sugar_rush`,
+        target: `${PACKAGE_ID}::tamagosui::wake_up_pet`,
         arguments: [tx.object(petId), tx.object("0x6")],
       });
 
       const { digest } = await signAndExecute({ transaction: tx });
       const response = await suiClient.waitForTransaction({
         digest,
-        options: { showEffects: true, showEvents: true },
+        options: { showEffects: true },
       });
       if (response?.effects?.status.status === "failure")
         throw new Error(response.effects.status.error);
 
       return response;
     },
-    onSuccess: (_response) => {
-      toast.success("✨ Sugar Rush buff activated for 50s!");
-      queryClient.invalidateQueries({ queryKey: queryKeyOwnedPet });
-      onSuccess?.();
+    onSuccess: (response) => {
+      toast.success(`Your pet has woken up! Tx: ${response.digest}`);
+      queryClient.invalidateQueries({ queryKey: queryKeyOwnedPet() });
     },
     onError: (error) => {
-      toast.error(`Failed to activate buff: ${error.message}`);
-      console.error("Error giving sugar rush:", error);
+      toast.error(`Failed to wake up pet: ${error}`);
+      console.error("Failed to wake up pet:", error);
     },
   });
 }

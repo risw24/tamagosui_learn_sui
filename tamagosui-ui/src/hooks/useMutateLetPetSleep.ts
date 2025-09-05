@@ -30,7 +30,7 @@ export default function useMutateLetPetSleep() {
       const tx = new Transaction();
       tx.moveCall({
         target: `${PACKAGE_ID}::tamagosui::let_pet_sleep`,
-        arguments: [tx.object(petId)],
+        arguments: [tx.object(petId), tx.object("0x6")],
       });
 
       const { digest } = await signAndExecute({ transaction: tx });
@@ -43,9 +43,9 @@ export default function useMutateLetPetSleep() {
 
       return response;
     },
-    onSuccess: (_response) => {
-      toast.success("Your pet is now sleeping!");
-      queryClient.invalidateQueries({ queryKey: queryKeyOwnedPet });
+    onSuccess: (response) => {
+      toast.success(`Your pet is now sleeping! Tx: ${response.digest}`);
+      queryClient.invalidateQueries({ queryKey: queryKeyOwnedPet() });
     },
     onError: (error) => {
       toast.error(`Failed to let your pet sleep: ${error.message}`);

@@ -49,7 +49,7 @@ export default function UseMutateUnequipAccessory() {
       toast.success(
         `Accessory unequipped successfully! Tx: ${response.digest}`,
       );
-      queryClient.invalidateQueries({ queryKey: queryKeyOwnedPet });
+      queryClient.invalidateQueries({ queryKey: queryKeyOwnedPet() });
       queryClient.invalidateQueries({ queryKey: queryKeyOwnedAccessories });
       queryClient.invalidateQueries({ queryKey: queryKeyEquippedAccessory });
     },

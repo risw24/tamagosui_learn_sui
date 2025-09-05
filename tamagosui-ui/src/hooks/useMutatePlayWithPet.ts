@@ -30,7 +30,7 @@ export default function useMutatePlayWithPet() {
       const tx = new Transaction();
       tx.moveCall({
         target: `${PACKAGE_ID}::tamagosui::play_with_pet`,
-        arguments: [tx.object(petId), tx.object("0x6")],
+        arguments: [tx.object(petId)],
       });
 
       const { digest } = await signAndExecute({ transaction: tx });
@@ -43,9 +43,9 @@ export default function useMutatePlayWithPet() {
 
       return response;
     },
-    onSuccess: (_response) => {
-      toast.success("Pet played with successfully!");
-      queryClient.invalidateQueries({ queryKey: queryKeyOwnedPet });
+    onSuccess: (response) => {
+      toast.success(`You played with your pet! Tx: ${response.digest}`);
+      queryClient.invalidateQueries({ queryKey: queryKeyOwnedPet() });
     },
     onError: (error) => {
       console.error("Error playing with pet:", error);

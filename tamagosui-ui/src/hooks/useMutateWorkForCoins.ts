@@ -43,10 +43,9 @@ export default function useMutateWorkForCoins() {
 
       return response;
     },
-    onSuccess: (_response) => {
-      toast.success("Worked for coins successfully!");
-
-      queryClient.invalidateQueries({ queryKey: queryKeyOwnedPet });
+    onSuccess: (response) => {
+      toast.success(`Your pet worked for coins! Tx: ${response.digest}`);
+      queryClient.invalidateQueries({ queryKey: queryKeyOwnedPet() });
     },
     onError: (error) => {
       console.error("Error working for coins:", error);

@@ -46,7 +46,7 @@ export default function useMutateFeedPet() {
     onSuccess: (response) => {
       toast.success(`Pet fed successfully! Tx: ${response.digest}`);
 
-      queryClient.invalidateQueries({ queryKey: queryKeyOwnedPet });
+      queryClient.invalidateQueries({ queryKey: queryKeyOwnedPet() });
     },
     onError: (error) => {
       console.error("Error feeding pet:", error);

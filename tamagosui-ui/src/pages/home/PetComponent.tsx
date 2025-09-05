@@ -36,66 +36,95 @@ import useMutateFeedPet from "@/hooks/useMutateFeedPet";
 import useMutateLetPetSleep from "@/hooks/useMutateLetPetSleep";
 import useMutatePlayWithPet from "@/hooks/useMutatePlayWithPet";
 import useMutateWorkForCoins from "@/hooks/useMutateWorkForCoins";
-import useMutateGiveSugarRush from "@/hooks/useMutateGiveSugarRush";
 import useMutateCheckAndLevelUp from "@/hooks/useMutateCheckLevel";
 
 import type { PetStruct } from "@/types/Pet";
-
-const FEED_COST = 5;
-const PLAY_ENERGY_COST = 15;
-const WORK_ENERGY_COST = 20;
+import { useQueryGameBalance } from "@/hooks/useQueryGameBalance";
+import useMutateWakeUpPet from "@/hooks/useMutateWakeUpPet";
 
 type PetDashboardProps = {
   pet: PetStruct;
 };
 
 export default function PetComponent({ pet }: PetDashboardProps) {
-  // Client-side state to manage the buff's visual timer
-  const [sugarRushExpiry, setSugarRushExpiry] = useState(0);
+  // --- Fetch Game Balance ---
+  const { data: gameBalance, isLoading: isLoadingGameBalance } =
+    useQueryGameBalance();
 
-  const isSugarRushActive = Date.now() < sugarRushExpiry;
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      if (Date.now() < sugarRushExpiry) {
-        setSugarRushExpiry((prev) => prev);
-      } else {
-        setSugarRushExpiry(0);
-      }
-    }, 1000);
-    return () => clearInterval(interval);
-  }, [sugarRushExpiry]);
+  const [displayStats, setDisplayStats] = useState(pet.stats);
 
   // --- Hooks for Main Pet Actions ---
   const { mutate: mutateFeedPet, isPending: isFeeding } = useMutateFeedPet();
   const { mutate: mutatePlayWithPet, isPending: isPlaying } =
     useMutatePlayWithPet();
-  const { mutate: mutateLetPetSleep, isPending: isSleeping } =
-    useMutateLetPetSleep();
   const { mutate: mutateWorkForCoins, isPending: isWorking } =
     useMutateWorkForCoins();
-  const { mutate: mutateGiveSugarRush, isPending: isGivingSugarRush } =
-    useMutateGiveSugarRush({
-      onSuccess: () => setSugarRushExpiry(Date.now() + 50000),
-    });
+
+  const { mutate: mutateLetPetSleep, isPending: isSleeping } =
+    useMutateLetPetSleep();
+  const { mutate: mutateWakeUpPet, isPending: isWakingUp } =
+    useMutateWakeUpPet();
   const { mutate: mutateLevelUp, isPending: isLevelingUp } =
     useMutateCheckAndLevelUp();
+
+  useEffect(() => {
+    setDisplayStats(pet.stats);
+  }, [pet.stats]);
+
+  useEffect(() => {
+    // This effect only runs when the pet is sleeping
+    if (pet.isSleeping && !isWakingUp && gameBalance) {
+      // Start a timer that updates the stats every second
+      const intervalId = setInterval(() => {
+        setDisplayStats((prev) => {
+          const energyPerSecond =
+            1000 / Number(gameBalance.sleep_energy_gain_ms);
+          const hungerLossPerSecond =
+            1000 / Number(gameBalance.sleep_hunger_loss_ms);
+          const happinessLossPerSecond =
+            1000 / Number(gameBalance.sleep_happiness_loss_ms);
+
+          return {
+            energy: Math.min(
+              gameBalance.max_stat,
+              prev.energy + energyPerSecond,
+            ),
+            hunger: Math.max(0, prev.hunger - hungerLossPerSecond),
+            happiness: Math.max(0, prev.happiness - happinessLossPerSecond),
+          };
+        });
+      }, 1000); // Runs every second
+
+      // IMPORTANT: Clean up the timer when the pet wakes up or the component unmounts
+      return () => clearInterval(intervalId);
+    }
+  }, [pet.isSleeping, isWakingUp, gameBalance]); // Rerun this effect if sleep status or balance changes
+
+  if (isLoadingGameBalance || !gameBalance)
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <h1 className="text-2xl">Loading Game Rules...</h1>
+      </div>
+    );
 
   // --- Client-side UI Logic & Button Disabling ---
   // `isAnyActionPending` prevents the user from sending multiple transactions at once.
   const isAnyActionPending =
-    isFeeding ||
-    isPlaying ||
-    isSleeping ||
-    isWorking ||
-    isGivingSugarRush ||
-    isLevelingUp;
+    isFeeding || isPlaying || isSleeping || isWorking || isLevelingUp;
 
   // These `can...` variables mirror the smart contract's rules (`assert!`) on the client-side.
-  const canFeed = pet.stats.hunger < 100 && pet.game_data.coins >= FEED_COST;
-  const canPlay = pet.stats.energy >= PLAY_ENERGY_COST;
-  const canWork = pet.stats.energy >= WORK_ENERGY_COST;
-  const canLevelUp = pet.game_data.experience >= pet.game_data.level * 100;
+  const canFeed =
+    !pet.isSleeping &&
+    pet.stats.hunger < gameBalance.max_stat &&
+    pet.game_data.coins >= Number(gameBalance.feed_coins_cost);
+  const canPlay =
+    !pet.isSleeping && pet.stats.energy >= gameBalance.play_energy_loss;
+  const canWork =
+    !pet.isSleeping && pet.stats.energy >= gameBalance.work_energy_loss;
+  const canLevelUp =
+    !pet.isSleeping &&
+    pet.game_data.experience >=
+      pet.game_data.level * Number(gameBalance.exp_per_level);
 
   return (
     <TooltipProvider>
@@ -143,33 +172,19 @@ export default function PetComponent({ pet }: PetDashboardProps) {
               <StatDisplay
                 icon={<BatteryIcon className="text-green-500" />}
                 label="Energy"
-                value={pet.stats.energy}
+                value={displayStats.energy}
               />
               <StatDisplay
                 icon={<HeartIcon className="text-pink-500" />}
                 label="Happiness"
-                value={pet.stats.happiness}
+                value={displayStats.happiness}
               />
               <StatDisplay
                 icon={<DrumstickIcon className="text-orange-500" />}
                 label="Hunger"
-                value={pet.stats.hunger}
+                value={displayStats.hunger}
               />
             </div>
-          </div>
-          {/* Buff Display Section */}
-          <div className="text-center space-y-1 pt-4">
-            <h3 className="text-sm font-bold text-muted-foreground">
-              ACTIVE EFFECTS
-            </h3>
-            {isSugarRushActive ? (
-              <div className="flex items-center justify-center gap-2 text-sm font-semibold text-purple-500 animate-pulse">
-                <ZapIcon size={16} />
-                <span>Sugar Rush! (Happiness x2)</span>
-              </div>
-            ) : (
-              <p className="text-xs text-muted-foreground">None</p>
-            )}
           </div>
 
           <div className="pt-2">
@@ -203,35 +218,41 @@ export default function PetComponent({ pet }: PetDashboardProps) {
               icon={<PlayIcon />}
             />
             <ActionButton
-              onClick={() => mutateLetPetSleep({ petId: pet.id })}
-              disabled={isAnyActionPending}
-              isPending={isSleeping}
-              label="Sleep"
-              icon={<BedIcon />}
-            />
-            <ActionButton
               onClick={() => mutateWorkForCoins({ petId: pet.id })}
               disabled={!canWork || isAnyActionPending}
               isPending={isWorking}
               label="Work"
               icon={<BriefcaseIcon />}
             />
-            <div className="col-span-2">
+          </div>
+          <div className="col-span-2 pt-2">
+            {pet.isSleeping ? (
               <Button
-                onClick={() => mutateGiveSugarRush({ petId: pet.id })}
-                disabled={isSugarRushActive || isAnyActionPending}
-                className="w-full bg-purple-600 hover:bg-purple-700"
+                onClick={() => mutateWakeUpPet({ petId: pet.id })}
+                disabled={isWakingUp}
+                className="w-full bg-yellow-500 hover:bg-yellow-600"
               >
-                {isGivingSugarRush ? (
+                {isWakingUp ? (
                   <Loader2Icon className="mr-2 h-4 w-4 animate-spin" />
                 ) : (
                   <ZapIcon className="mr-2 h-4 w-4" />
-                )}
-                {isSugarRushActive
-                  ? `Active (${Math.round((sugarRushExpiry - Date.now()) / 1000)}s)`
-                  : "Give Treat"}
+                )}{" "}
+                Wake Up!
               </Button>
-            </div>
+            ) : (
+              <Button
+                onClick={() => mutateLetPetSleep({ petId: pet.id })}
+                disabled={isAnyActionPending}
+                className="w-full bg-blue-600 hover:bg-blue-700"
+              >
+                {isSleeping ? (
+                  <Loader2Icon className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <BedIcon className="mr-2 h-4 w-4" />
+                )}{" "}
+                Sleep
+              </Button>
+            )}
           </div>
         </CardContent>
         <WardrobeManager pet={pet} isAnyActionPending={isAnyActionPending} />

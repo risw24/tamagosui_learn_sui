@@ -41,7 +41,7 @@ export function normalizeSuiPetObject(
       experience: Number(fields.game_data.fields.experience),
       level: fields.game_data.fields.level,
     },
-  } satisfies PetStruct;
+  } as PetStruct;
 }
 
 export function getTimeSinceAdoption(adoptedAt: number) {

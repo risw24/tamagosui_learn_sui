@@ -17,6 +17,9 @@ export type PetStruct = {
   image_url: string;
   stats: PetStructStats;
   game_data: PetStructGameData;
+
+  // Dynamic Fields
+  isSleeping: boolean;
 };
 
 export type PetAccessoryStruct = {

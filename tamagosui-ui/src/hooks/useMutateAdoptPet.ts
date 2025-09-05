@@ -46,7 +46,7 @@ export function useMutateAdoptPet() {
     },
     onSuccess: (response) => {
       toast.success(`Pet adopted successfully! Tx: ${response.digest}`);
-      queryClient.invalidateQueries({ queryKey: queryKeyOwnedPet });
+      queryClient.invalidateQueries({ queryKey: queryKeyOwnedPet() });
     },
     onError: (error) => {
       console.error("Error adopting pet:", error);
