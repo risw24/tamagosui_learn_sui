@@ -9,28 +9,31 @@ import { toast } from "sonner";
 
 import { queryKeyOwnedPet } from "./useQueryOwnedPet";
 import { PACKAGE_ID } from "@/constants/contract";
+import { queryKeyOwnedAccessories } from "./useQueryOwnedAccessories";
+import { queryKeyEquippedAccessory } from "./useQueryEquippedAccessory";
 
-const mutateKeyFeedPet = ["mutate", "feed-pet"];
+const mutateKeyEquipAccessory = ["mutate", "equip-accessory"];
 
-type UseMutateFeedPetParams = {
+type UseMutateEquipAccessory = {
   petId: string;
+  accessoryId: string;
 };
 
-export default function useMutateFeedPet() {
+export default function UseMutateEquipAccessory() {
   const currentAccount = useCurrentAccount();
   const { mutateAsync: signAndExecute } = useSignAndExecuteTransaction();
   const suiClient = useSuiClient();
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationKey: mutateKeyFeedPet,
-    mutationFn: async ({ petId }: UseMutateFeedPetParams) => {
+    mutationKey: mutateKeyEquipAccessory,
+    mutationFn: async ({ petId, accessoryId }: UseMutateEquipAccessory) => {
       if (!currentAccount) throw new Error("No connected account");
 
       const tx = new Transaction();
       tx.moveCall({
-        target: `${PACKAGE_ID}::tamagosui::feed_pet`,
-        arguments: [tx.object(petId)],
+        target: `${PACKAGE_ID}::tamagosui::equip_accessory`,
+        arguments: [tx.object(petId), tx.object(accessoryId)],
       });
 
       const { digest } = await signAndExecute({ transaction: tx });
@@ -44,13 +47,14 @@ export default function useMutateFeedPet() {
       return response;
     },
     onSuccess: (response) => {
-      toast.success(`Pet fed successfully! Tx: ${response.digest}`);
-
+      toast.success(`Accessory equipped successfully! Tx: ${response.digest}`);
       queryClient.invalidateQueries({ queryKey: queryKeyOwnedPet });
+      queryClient.invalidateQueries({ queryKey: queryKeyOwnedAccessories });
+      queryClient.invalidateQueries({ queryKey: queryKeyEquippedAccessory });
     },
     onError: (error) => {
       console.error("Error feeding pet:", error);
-      toast.error(`Error feeding pet: ${error.message}`);
+      toast.error(`Error equipping accessory: ${error.message}`);
     },
   });
 }

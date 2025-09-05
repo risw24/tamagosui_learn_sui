@@ -10,26 +10,26 @@ import { toast } from "sonner";
 import { queryKeyOwnedPet } from "./useQueryOwnedPet";
 import { PACKAGE_ID } from "@/constants/contract";
 
-const mutateKeyFeedPet = ["mutate", "feed-pet"];
+const mutateKeyCheckAndLevelUp = ["mutate", "check-and-level-up"];
 
-type UseMutateFeedPetParams = {
+type UseMutateCheckAndLevelUp = {
   petId: string;
 };
 
-export default function useMutateFeedPet() {
+export default function useMutateCheckAndLevelUp() {
   const currentAccount = useCurrentAccount();
   const { mutateAsync: signAndExecute } = useSignAndExecuteTransaction();
   const suiClient = useSuiClient();
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationKey: mutateKeyFeedPet,
-    mutationFn: async ({ petId }: UseMutateFeedPetParams) => {
+    mutationKey: mutateKeyCheckAndLevelUp,
+    mutationFn: async ({ petId }: UseMutateCheckAndLevelUp) => {
       if (!currentAccount) throw new Error("No connected account");
 
       const tx = new Transaction();
       tx.moveCall({
-        target: `${PACKAGE_ID}::tamagosui::feed_pet`,
+        target: `${PACKAGE_ID}::tamagosui::check_and_level_up`,
         arguments: [tx.object(petId)],
       });
 
@@ -44,13 +44,12 @@ export default function useMutateFeedPet() {
       return response;
     },
     onSuccess: (response) => {
-      toast.success(`Pet fed successfully! Tx: ${response.digest}`);
-
+      toast.success(`Checked pet level successfully! Tx: ${response.digest}`);
       queryClient.invalidateQueries({ queryKey: queryKeyOwnedPet });
     },
     onError: (error) => {
       console.error("Error feeding pet:", error);
-      toast.error(`Error feeding pet: ${error.message}`);
+      toast.error(`Error checking pet level: ${error.message}`);
     },
   });
 }

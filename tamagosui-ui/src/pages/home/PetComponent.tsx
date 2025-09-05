@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useState } from "react";
 import {
   CoinsIcon,
   HeartIcon,
@@ -10,6 +10,7 @@ import {
   BedIcon,
   BriefcaseIcon,
   ZapIcon,
+  ChevronUpIcon,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -20,7 +21,6 @@ import {
   CardTitle,
   CardDescription,
 } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
 import {
   Tooltip,
   TooltipContent,
@@ -28,13 +28,18 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
+import { StatDisplay } from "./components/StatDisplay";
+import { ActionButton } from "./components/ActionButton";
+import { WardrobeManager } from "./components/Wardrobe";
+
 import useMutateFeedPet from "@/hooks/useMutateFeedPet";
 import useMutateLetPetSleep from "@/hooks/useMutateLetPetSleep";
 import useMutatePlayWithPet from "@/hooks/useMutatePlayWithPet";
 import useMutateWorkForCoins from "@/hooks/useMutateWorkForCoins";
+import useMutateGiveSugarRush from "@/hooks/useMutateGiveSugarRush";
+import useMutateCheckAndLevelUp from "@/hooks/useMutateCheckLevel";
 
 import type { PetStruct } from "@/types/Pet";
-import useMutateGiveSugarRush from "@/hooks/useMutateGiveSugarRush";
 
 const FEED_COST = 5;
 const PLAY_ENERGY_COST = 15;
@@ -48,21 +53,20 @@ export default function PetComponent({ pet }: PetDashboardProps) {
   // Client-side state to manage the buff's visual timer
   const [sugarRushExpiry, setSugarRushExpiry] = useState(0);
 
-  // Check if the buff is visually active
   const isSugarRushActive = Date.now() < sugarRushExpiry;
 
   useEffect(() => {
-    // This effect ensures the UI updates when the timer runs out
-    const timer = setInterval(() => {
-      if (Date.now() > sugarRushExpiry) {
-        setSugarRushExpiry(0); // Reset expiry when time is up
+    const interval = setInterval(() => {
+      if (Date.now() < sugarRushExpiry) {
+        setSugarRushExpiry((prev) => prev);
+      } else {
+        setSugarRushExpiry(0);
       }
-      setSugarRushExpiry((prev) => prev - 1);
     }, 1000);
-    return () => clearInterval(timer);
+    return () => clearInterval(interval);
   }, [sugarRushExpiry]);
 
-  // Setup mutation hooks for each action
+  // --- Hooks for Main Pet Actions ---
   const { mutate: mutateFeedPet, isPending: isFeeding } = useMutateFeedPet();
   const { mutate: mutatePlayWithPet, isPending: isPlaying } =
     useMutatePlayWithPet();
@@ -74,13 +78,24 @@ export default function PetComponent({ pet }: PetDashboardProps) {
     useMutateGiveSugarRush({
       onSuccess: () => setSugarRushExpiry(Date.now() + 50000),
     });
+  const { mutate: mutateLevelUp, isPending: isLevelingUp } =
+    useMutateCheckAndLevelUp();
 
-  // Define disabling logic for buttons
+  // --- Client-side UI Logic & Button Disabling ---
+  // `isAnyActionPending` prevents the user from sending multiple transactions at once.
+  const isAnyActionPending =
+    isFeeding ||
+    isPlaying ||
+    isSleeping ||
+    isWorking ||
+    isGivingSugarRush ||
+    isLevelingUp;
+
+  // These `can...` variables mirror the smart contract's rules (`assert!`) on the client-side.
   const canFeed = pet.stats.hunger < 100 && pet.game_data.coins >= FEED_COST;
   const canPlay = pet.stats.energy >= PLAY_ENERGY_COST;
   const canWork = pet.stats.energy >= WORK_ENERGY_COST;
-  const isAnyActionPending =
-    isFeeding || isPlaying || isSleeping || isWorking || isGivingSugarRush;
+  const canLevelUp = pet.game_data.experience >= pet.game_data.level * 100;
 
   return (
     <TooltipProvider>
@@ -157,6 +172,21 @@ export default function PetComponent({ pet }: PetDashboardProps) {
             )}
           </div>
 
+          <div className="pt-2">
+            <Button
+              onClick={() => mutateLevelUp({ petId: pet.id })}
+              disabled={!canLevelUp || isAnyActionPending}
+              className="w-full bg-green-600 hover:bg-green-700"
+            >
+              {isLevelingUp ? (
+                <Loader2Icon className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <ChevronUpIcon className="mr-2 h-4 w-4" />
+              )}
+              Level Up!
+            </Button>
+          </div>
+
           <div className="grid grid-cols-2 gap-3">
             <ActionButton
               onClick={() => mutateFeedPet({ petId: pet.id })}
@@ -204,62 +234,8 @@ export default function PetComponent({ pet }: PetDashboardProps) {
             </div>
           </div>
         </CardContent>
+        <WardrobeManager pet={pet} isAnyActionPending={isAnyActionPending} />
       </Card>
     </TooltipProvider>
-  );
-}
-
-// Helper component for individual stat display
-type StatDisplayProps = {
-  icon: ReactNode;
-  label: string;
-  value: number;
-};
-function StatDisplay({ icon, label, value }: StatDisplayProps) {
-  return (
-    <Tooltip>
-      <TooltipTrigger className="w-full">
-        <div className="flex items-center gap-3 w-full">
-          <div className="w-6 h-6">{icon}</div>
-          <Progress value={value} className="w-full" />
-        </div>
-      </TooltipTrigger>
-      <TooltipContent>
-        <p>
-          {label}: {value} / 100
-        </p>
-      </TooltipContent>
-    </Tooltip>
-  );
-}
-
-// Helper component for action buttons to avoid repetition
-type ActionButtonProps = {
-  onClick: () => void;
-  disabled: boolean;
-  isPending: boolean;
-  label: string;
-  icon: ReactNode;
-};
-function ActionButton({
-  onClick,
-  disabled,
-  isPending,
-  label,
-  icon,
-}: ActionButtonProps) {
-  return (
-    <Button
-      onClick={onClick}
-      disabled={disabled}
-      className="w-full cursor-pointer"
-    >
-      {isPending ? (
-        <Loader2Icon className="mr-2 h-4 w-4 animate-spin" />
-      ) : (
-        <div className="mr-2 h-4 w-4">{icon}</div>
-      )}
-      {label}
-    </Button>
   );
 }

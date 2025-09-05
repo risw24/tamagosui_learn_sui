@@ -1,10 +1,3 @@
-export type Pet = {
-  id: number;
-  type: string;
-  name: string;
-  image_url: string;
-};
-
 type PetStructGameData = {
   coins: number;
   experience: number;
@@ -26,7 +19,21 @@ export type PetStruct = {
   game_data: PetStructGameData;
 };
 
-export type RawPetFields = {
+export type PetAccessoryStruct = {
+  id: { id: string };
+  name: string;
+  image_url: string;
+};
+
+export type SuiWrappedDynamicField<T> = {
+  id: { id: string };
+  name: any;
+  value: {
+    fields: T;
+  };
+};
+
+export type RawPetStructFields = {
   id: { id: string };
   name: string;
   image_url: string;

@@ -8,7 +8,6 @@ export const queryKeyOwnedPet = ["owned-pet"];
 
 export function useQueryOwnedPet() {
   const currentAccount = useCurrentAccount();
-
   const suiClient = useSuiClient();
 
   return useQuery({

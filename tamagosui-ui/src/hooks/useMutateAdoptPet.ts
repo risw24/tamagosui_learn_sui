@@ -9,9 +9,12 @@ import { toast } from "sonner";
 
 import { queryKeyOwnedPet } from "./useQueryOwnedPet";
 import { PACKAGE_ID } from "@/constants/contract";
-import type { Pet } from "@/types/Pet";
 
 const mutationKeyAdoptPet = ["mutate", "adopt-pet"];
+
+type UseMutateAdoptPetParams = {
+  name: string;
+};
 
 export function useMutateAdoptPet() {
   const currentAccount = useCurrentAccount();
@@ -21,21 +24,16 @@ export function useMutateAdoptPet() {
 
   return useMutation({
     mutationKey: mutationKeyAdoptPet,
-    mutationFn: async (payload: Pet) => {
+    mutationFn: async ({ name }: UseMutateAdoptPetParams) => {
       if (!currentAccount) throw new Error("No connected account");
 
       const tx = new Transaction();
       tx.moveCall({
         target: `${PACKAGE_ID}::tamagosui::adopt_pet`,
-        arguments: [
-          tx.pure.string(payload.name),
-          tx.pure.string(payload.image_url),
-          tx.object("0x6"),
-        ],
+        arguments: [tx.pure.string(name), tx.object("0x6")],
       });
 
       const result = await signAndExecute({ transaction: tx });
-      console.log("Transaction result:", result);
       const response = await suiClient.waitForTransaction({
         digest: result.digest,
         options: { showEvents: true, showEffects: true },
@@ -44,12 +42,10 @@ export function useMutateAdoptPet() {
       if (response?.effects?.status.status === "failure")
         throw new Error(response.effects.status.error);
 
-      console.log("Transaction confirmed:", response);
       return response;
     },
     onSuccess: (response) => {
       toast.success(`Pet adopted successfully! Tx: ${response.digest}`);
-
       queryClient.invalidateQueries({ queryKey: queryKeyOwnedPet });
     },
     onError: (error) => {

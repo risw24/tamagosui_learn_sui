@@ -9,28 +9,24 @@ import { toast } from "sonner";
 
 import { queryKeyOwnedPet } from "./useQueryOwnedPet";
 import { PACKAGE_ID } from "@/constants/contract";
+import { queryKeyOwnedAccessories } from "./useQueryOwnedAccessories";
 
-const mutateKeyFeedPet = ["mutate", "feed-pet"];
+const mutateKeyMintAccessory = ["mutate", "mint-accessory"];
 
-type UseMutateFeedPetParams = {
-  petId: string;
-};
-
-export default function useMutateFeedPet() {
+export default function useMutateMintAccessory() {
   const currentAccount = useCurrentAccount();
   const { mutateAsync: signAndExecute } = useSignAndExecuteTransaction();
   const suiClient = useSuiClient();
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationKey: mutateKeyFeedPet,
-    mutationFn: async ({ petId }: UseMutateFeedPetParams) => {
+    mutationKey: mutateKeyMintAccessory,
+    mutationFn: async () => {
       if (!currentAccount) throw new Error("No connected account");
 
       const tx = new Transaction();
       tx.moveCall({
-        target: `${PACKAGE_ID}::tamagosui::feed_pet`,
-        arguments: [tx.object(petId)],
+        target: `${PACKAGE_ID}::tamagosui::mint_accessory`,
       });
 
       const { digest } = await signAndExecute({ transaction: tx });
@@ -44,13 +40,13 @@ export default function useMutateFeedPet() {
       return response;
     },
     onSuccess: (response) => {
-      toast.success(`Pet fed successfully! Tx: ${response.digest}`);
-
+      toast.success(`Accessory minted successfully! Tx: ${response.digest}`);
       queryClient.invalidateQueries({ queryKey: queryKeyOwnedPet });
+      queryClient.invalidateQueries({ queryKey: queryKeyOwnedAccessories });
     },
     onError: (error) => {
       console.error("Error feeding pet:", error);
-      toast.error(`Error feeding pet: ${error.message}`);
+      toast.error(`Error minting accessory: ${error.message}`);
     },
   });
 }

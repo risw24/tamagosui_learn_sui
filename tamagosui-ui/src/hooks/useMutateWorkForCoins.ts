@@ -40,7 +40,6 @@ export default function useMutateWorkForCoins() {
       });
       if (response?.effects?.status.status === "failure")
         throw new Error(response.effects.status.error);
-      console.log("Work for coins transaction confirmed:", response);
 
       return response;
     },

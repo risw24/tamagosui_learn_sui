@@ -1,65 +1,70 @@
 import { useState } from "react";
-import { useCurrentAccount } from "@mysten/dapp-kit";
-
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-
-import { availablePets } from "@/data/pets";
-
 import { useMutateAdoptPet } from "@/hooks/useMutateAdoptPet";
+import { Loader2Icon } from "lucide-react";
 
-import { cn } from "@/lib/utils";
-import type { Pet } from "@/types/Pet";
 
 export default function AdoptComponent() {
-  const currentAccount = useCurrentAccount();
-  if (!currentAccount) return;
-
-  const [selectedPet, setSelectedPet] = useState<Pet | null>(null);
-
-  const { mutate: mutateAdoptPet } = useMutateAdoptPet();
+  const [petName, setPetName] = useState("");
+  const { mutate: mutateAdoptPet, isPending: isAdopting } = useMutateAdoptPet();
 
   const handleAdoptPet = () => {
-    if (!selectedPet) return;
-    mutateAdoptPet(selectedPet);
+    if (!petName.trim()) return;
+    mutateAdoptPet({ name: petName });
   };
 
   return (
-    <Card className="max-w-md text-center">
-      <CardContent>
-        <div className="">
-          <h2 className="text-xl">ADOPT A PET</h2>
-        </div>
-        <div className="grid grid-cols-2 gap-3">
-          {availablePets.map((pet) => (
-            <div
-              key={pet.id}
-              className={cn(
-                "p-4 border rounded-lg flex flex-col cursor-pointer",
-                selectedPet?.id === pet.id
-                  ? "border-blue-500"
-                  : "border-gray-300",
-              )}
-              onClick={() => setSelectedPet(pet)}
-            >
-              <img src={pet.image_url} alt={pet.type} className="w-16 h-16" />
-              <h3>{pet.type}</h3>
-            </div>
-          ))}
-        </div>
-        {selectedPet && (
-          <Input
-            value={selectedPet.name ?? ""}
-            onChange={(e) =>
-              setSelectedPet({ ...selectedPet, name: e.target.value })
-            }
-            placeholder="Enter your pet name"
-          />
-        )}
+    <Card className="max-w-xs w-full mx-auto text-center shadow-lg">
+      <CardHeader>
+        <CardTitle className="text-2xl">ADOPT YOUR NEW FRIEND</CardTitle>
+        <CardDescription>Begin your Sui adventure!</CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        {/* Tampilkan gambar pet yang akan diadopsi */}
         <div>
-          <Button onClick={handleAdoptPet} disabled={!selectedPet?.name}>
-            Adopt
+          <img
+            src="/pet.jpeg"
+            alt="Your new pet"
+            className="w-32 h-32 mx-auto rounded-full border-4 border-primary/20 object-cover"
+          />
+        </div>
+
+        {/* Kolom input untuk nama */}
+        <div className="space-y-2">
+          <p className="text-sm text-muted-foreground">
+            What will you name your new companion?
+          </p>
+          <Input
+            value={petName}
+            onChange={(e) => setPetName(e.target.value)}
+            placeholder="Enter your pet's name"
+            disabled={isAdopting}
+          />
+        </div>
+
+        {/* Tombol Adopsi */}
+        <div>
+          <Button
+            onClick={handleAdoptPet}
+            disabled={!petName.trim() || isAdopting}
+            className="w-full"
+          >
+            {isAdopting ? (
+              <>
+                <Loader2Icon className="mr-2 h-4 w-4 animate-spin" />
+                Adopting...
+              </>
+            ) : (
+              "Adopt Now!"
+            )}
           </Button>
         </div>
       </CardContent>

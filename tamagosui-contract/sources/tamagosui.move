@@ -8,7 +8,19 @@ const E_NOT_ENOUGH_COINS: u64 = 101;
 const E_PET_NOT_HUNGRY: u64 = 102;
 const E_PET_TOO_TIRED: u64 = 103;
 const E_PET_TOO_HUNGRY: u64 = 104;
-const E_BUFF_ALREADY_EXISTS: u64 = 105;
+const E_ITEM_ALREADY_EQUIPPED: u64 = 106;
+const E_NO_ITEM_EQUIPPED: u64 = 107;
+const E_NOT_ENOUGH_EXP: u64 = 110;
+
+// === Constants ===
+const PET_LEVEL_1_IMAGE_URL: vector<u8> = b"https://tan-kind-lizard-741.mypinata.cloud/ipfs/bafkreidkhjpthergw2tcg6u5r344shgi2cdg5afmhgpf5bv34vqfrr7hni";
+const PET_LEVEL_1_IMAGE_WITH_GLASSES_URL: vector<u8> = b"https://tan-kind-lizard-741.mypinata.cloud/ipfs/bafkreibizappmcjaq5a5metl27yc46co4kxewigq6zu22vovwvn5qfsbiu";
+const PET_LEVEL_2_IMAGE_URL: vector<u8> = b"https://tan-kind-lizard-741.mypinata.cloud/ipfs/bafkreia5tgsowzfu6mzjfcxagfpbkghfuho6y5ybetxh3wabwrc5ajmlpq";
+const PET_LEVEL_2_IMAGE_WITH_GLASSES_URL:vector<u8> = b"https://tan-kind-lizard-741.mypinata.cloud/ipfs/bafkreif5bkpnqyybq3aqgafqm72x4wfjwcuxk33vvykx44weqzuilop424";
+const ACCESSORY_GLASSES_IMAGE_URL: vector<u8> = b"https://tan-kind-lizard-741.mypinata.cloud/ipfs/bafkreigyivmq45od3jkryryi3w6t5j65hcnfh5kgwpi2ex7llf2i6se7de";
+const EQUIPPED_ITEM_KEY: vector<u8> = b"equipped_item";
+const BUFF_SUGAR_RUSH: vector<u8> = b"sugar_rush";
+const SUGAR_RUSH_DURATION_MS: u64 = 50000; // 50 seconds
 
 // === Game Balance Constants ===
 const MAX_STAT: u8 = 100;
@@ -26,10 +38,8 @@ const SLEEP_ENERGY_GAIN: u8 = 25;
 
 const WORK_ENERGY_LOSS: u8 = 20;
 const WORK_COINS_GAIN: u64 = 10;
-const WORK_EXPERIENCE_GAIN: u64 = 5;
+const WORK_EXPERIENCE_GAIN: u64 = 50;
 
-const BUFF_SUGAR_RUSH: vector<u8> = b"sugar_rush";
-const SUGAR_RUSH_DURATION_MS: u64 = 50000; // 50 seconds
 
 public struct TAMAGOSUI has drop {}
 
@@ -40,6 +50,12 @@ public struct Pet has key {
     adopted_at: u64,
     stats: PetStats,
     game_data: PetGameData,
+}
+
+public struct PetAccessory has key, store {
+    id: UID,
+    name: String,
+    image_url: String
 }
 
 public struct PetStats has store {
@@ -54,23 +70,19 @@ public struct PetGameData has store {
     level: u8,
 }
 
+// === Events ===
+
 public struct PetAdopted has copy, drop {
     pet_id: ID,
     name: String,
     adopted_at: u64
 }
-
 public struct PetAction has copy, drop {
     pet_id: ID,
     action: String,
     energy: u8,
     happiness: u8,
     hunger: u8
-}
-
-public struct Buff has key, store {
-    id: UID,
-
 }
 
 fun init(witness: TAMAGOSUI, ctx: &mut TxContext) {
@@ -96,7 +108,6 @@ fun init(witness: TAMAGOSUI, ctx: &mut TxContext) {
 
 public entry fun adopt_pet(
     name: String,
-    image_url: String,
     clock: &Clock,
     ctx: &mut TxContext
 ) {
@@ -117,7 +128,7 @@ public entry fun adopt_pet(
     let pet = Pet {
         id: object::new(ctx),
         name,
-        image_url,
+        image_url: string::utf8(PET_LEVEL_1_IMAGE_URL),
         adopted_at: current_time,
         stats: pet_stats,
         game_data: pet_game_data
@@ -179,22 +190,32 @@ public entry fun let_pet_sleep(pet: &mut Pet) {
 
 public entry fun work_for_coins(pet: &mut Pet) {
     assert!(pet.stats.energy >= 20, E_PET_TOO_TIRED);
-
     pet.stats.energy = if (pet.stats.energy >= WORK_ENERGY_LOSS) pet.stats.energy - WORK_ENERGY_LOSS else 0;
     pet.game_data.coins = pet.game_data.coins + WORK_COINS_GAIN;
     pet.game_data.experience = pet.game_data.experience + WORK_EXPERIENCE_GAIN;
-
     emit_action(pet, b"worked");
 }
 
 public entry fun check_and_level_up(pet: &mut Pet) {
+    // Needs 100 exp for level 1, 200 for level 2, etc.
     let required_exp = (pet.game_data.level as u64) * 100;
-    if (pet.game_data.experience >= required_exp) {
-        pet.game_data.level = pet.game_data.level + 1;
-        pet.game_data.experience = pet.game_data.experience - required_exp;
+    assert!(pet.game_data.experience >= required_exp, E_NOT_ENOUGH_EXP);
 
-        emit_action(pet, b"leveled_up")
-    }
+    // Level up
+    pet.game_data.level = pet.game_data.level + 1;
+    pet.game_data.experience = pet.game_data.experience - required_exp;
+    
+    // Update image if an accessory is equipped
+    let key = string::utf8(EQUIPPED_ITEM_KEY);
+    let is_equipped = dynamic_field::exists_<String>(&pet.id, key);
+
+    // Update image URL based on level and accessory status
+    if (pet.game_data.level == 2) {
+        if (is_equipped) { pet.image_url = string::utf8(PET_LEVEL_2_IMAGE_WITH_GLASSES_URL); }
+        else { pet.image_url = string::utf8(PET_LEVEL_2_IMAGE_URL); }
+    };
+
+    emit_action(pet, b"leveled_up")
 }
 
 public entry fun give_sugar_rush(pet: &mut Pet, clock: &Clock) {
@@ -204,7 +225,7 @@ public entry fun give_sugar_rush(pet: &mut Pet, clock: &Clock) {
     // Check if the buff field already exists
     if (dynamic_field::exists_<String>(&pet.id, copy buff_name)) {
         // If it exists, just update the expiration time. This is more efficient.
-        let expires_at: &mut u64 = dynamic_field::borrow_mut(&mut pet.id, buff_name);
+        let expires_at = dynamic_field::borrow_mut(&mut pet.id, buff_name);
         *expires_at = new_expires_at;
     } else {
         // If it doesn't exist, add it.
@@ -212,6 +233,44 @@ public entry fun give_sugar_rush(pet: &mut Pet, clock: &Clock) {
     }
 }
 
+public entry fun mint_accessory(ctx: &mut TxContext) {
+    let accessory = PetAccessory {
+        id: object::new(ctx),
+        name: string::utf8(b"cool glasses"),
+        image_url: string::utf8(ACCESSORY_GLASSES_IMAGE_URL)
+    };
+    transfer::transfer(accessory, ctx.sender());
+}
+
+public entry fun equip_accessory(pet: &mut Pet, accessory: PetAccessory) {
+    let key = string::utf8(EQUIPPED_ITEM_KEY);
+    assert!(!dynamic_field::exists_<String>(&pet.id, copy key), E_ITEM_ALREADY_EQUIPPED);
+
+    if (pet.game_data.level == 1) {
+        pet.image_url = string::utf8(PET_LEVEL_1_IMAGE_WITH_GLASSES_URL);
+    } else if (pet.game_data.level >= 2) {
+        pet.image_url = string::utf8(PET_LEVEL_2_IMAGE_WITH_GLASSES_URL);
+    };
+
+    dynamic_field::add(&mut pet.id, key, accessory);
+    emit_action(pet, b"equipped_item");
+}
+
+public entry fun unequip_accessory(pet: &mut Pet, ctx: &mut TxContext) {
+    let key = string::utf8(EQUIPPED_ITEM_KEY);
+    assert!(dynamic_field::exists_<String>(&pet.id, key), E_NO_ITEM_EQUIPPED);
+
+    if (pet.game_data.level == 1) {
+        pet.image_url = string::utf8(PET_LEVEL_1_IMAGE_URL);
+    } else if (pet.game_data.level >= 2) {
+        pet.image_url = string::utf8(PET_LEVEL_2_IMAGE_URL);
+    };
+
+    let accessory: PetAccessory = dynamic_field::remove<String, PetAccessory>(&mut pet.id, key);
+
+    transfer::transfer(accessory, ctx.sender());
+    emit_action(pet, b"unequipped_item");
+}
 
 // === View Functions ===
 public fun get_pet_name(pet: &Pet): String { pet.name }

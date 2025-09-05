@@ -9,27 +9,29 @@ import { toast } from "sonner";
 
 import { queryKeyOwnedPet } from "./useQueryOwnedPet";
 import { PACKAGE_ID } from "@/constants/contract";
+import { queryKeyEquippedAccessory } from "./useQueryEquippedAccessory";
+import { queryKeyOwnedAccessories } from "./useQueryOwnedAccessories";
 
-const mutateKeyFeedPet = ["mutate", "feed-pet"];
+const mutateKeyEquipAccessory = ["mutate", "unequip-accessory"];
 
-type UseMutateFeedPetParams = {
+type UseMutateUnequipAccessory = {
   petId: string;
 };
 
-export default function useMutateFeedPet() {
+export default function UseMutateUnequipAccessory() {
   const currentAccount = useCurrentAccount();
   const { mutateAsync: signAndExecute } = useSignAndExecuteTransaction();
   const suiClient = useSuiClient();
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationKey: mutateKeyFeedPet,
-    mutationFn: async ({ petId }: UseMutateFeedPetParams) => {
+    mutationKey: mutateKeyEquipAccessory,
+    mutationFn: async ({ petId }: UseMutateUnequipAccessory) => {
       if (!currentAccount) throw new Error("No connected account");
 
       const tx = new Transaction();
       tx.moveCall({
-        target: `${PACKAGE_ID}::tamagosui::feed_pet`,
+        target: `${PACKAGE_ID}::tamagosui::unequip_accessory`,
         arguments: [tx.object(petId)],
       });
 
@@ -44,13 +46,16 @@ export default function useMutateFeedPet() {
       return response;
     },
     onSuccess: (response) => {
-      toast.success(`Pet fed successfully! Tx: ${response.digest}`);
-
+      toast.success(
+        `Accessory unequipped successfully! Tx: ${response.digest}`,
+      );
       queryClient.invalidateQueries({ queryKey: queryKeyOwnedPet });
+      queryClient.invalidateQueries({ queryKey: queryKeyOwnedAccessories });
+      queryClient.invalidateQueries({ queryKey: queryKeyEquippedAccessory });
     },
     onError: (error) => {
       console.error("Error feeding pet:", error);
-      toast.error(`Error feeding pet: ${error.message}`);
+      toast.error(`Error unequipping accessory: ${error.message}`);
     },
   });
 }

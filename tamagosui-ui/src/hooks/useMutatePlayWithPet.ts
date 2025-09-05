@@ -40,7 +40,6 @@ export default function useMutatePlayWithPet() {
       });
       if (response?.effects?.status.status === "failure")
         throw new Error(response.effects.status.error);
-      console.log("Feed pet transaction confirmed:", response);
 
       return response;
     },
