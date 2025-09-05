@@ -12,7 +12,7 @@ const E_ITEM_ALREADY_EQUIPPED: u64 = 105;
 const E_NO_ITEM_EQUIPPED: u64 = 106;
 const E_NOT_ENOUGH_EXP: u64 = 107;
 const E_PET_IS_ASLEEP: u64 = 108;
-const E_PET_IS_AWAKE: u64 = 109;
+const E_PET_IS_ALREADY_ASLEEP: u64 = 109;
 
 // === Constants ===
 const PET_LEVEL_1_IMAGE_URL: vector<u8> = b"https://tan-kind-lizard-741.mypinata.cloud/ipfs/bafkreidkhjpthergw2tcg6u5r344shgi2cdg5afmhgpf5bv34vqfrr7hni";
@@ -275,7 +275,7 @@ public entry fun work_for_coins(pet: &mut Pet) {
 }
 
 public entry fun let_pet_sleep(pet: &mut Pet, clock: &Clock) {
-    assert!(!is_sleeping(pet), E_PET_IS_AWAKE);
+    assert!(!is_sleeping(pet), E_PET_IS_ALREADY_ASLEEP);
 
     let key = string::utf8(SLEEP_STARTED_AT_KEY);
     dynamic_field::add(&mut pet.id, key, clock.timestamp_ms());
