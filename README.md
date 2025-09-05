@@ -586,7 +586,7 @@ public fun init_for_testing(ctx: &mut TxContext) {
 }
 ```
 
-# Full Code Implementation
+# ✅ Full Code Implementation
 ```move
 module 0x0::tamagosui;
 
@@ -1040,9 +1040,7 @@ public fun init_for_testing(ctx: &mut TxContext) {
 
 ```
 
----
-
-## Step 15: Deploy dan Testing
+## Step 17: Deploy dan Testing
 
 ### Compile Contract:
 ```bash
@@ -1051,19 +1049,17 @@ sui move build
 
 ### Deploy ke Testnet:
 ```bash
-sui client publish --gas-budget 100000000
+sui client publish
 ```
 
 ### Test Functions:
 ```bash
 # Adopt pet
-sui client call --function adopt_pet --module tamagosui --package [PACKAGE_ID] --args "My Pet" [CLOCK_ID] --gas-budget 10000000
+sui client call --function adopt_pet --module tamagosui --package [PACKAGE_ID] --args "My Pet" [CLOCK_ID] 
 
 # Feed pet
-sui client call --function feed_pet --module tamagosui --package [PACKAGE_ID] --args [PET_ID] --gas-budget 10000000
+sui client call --function feed_pet --module tamagosui --package [PACKAGE_ID] --args [PET_ID]
 ```
-
----
 
 # 🧠 Konsep Move Lanjutan dalam Tamagosui
 
@@ -1378,7 +1374,7 @@ fun get_game_balance(): GameBalance {
 }
 ```
 
-**3. Operasi Batch (Peningkatan Masa Depan):**
+**3. Operasi Batch (Next Update):**
 ```move
 // Daripada aksi pet individual
 public entry fun batch_feed_pets(pets: vector<&mut Pet>) {
@@ -1394,8 +1390,6 @@ public entry fun batch_feed_pets(pets: vector<&mut Pet>) {
 
 > **References:**
 > - [Sui Gas Pricing](https://docs.sui.io/concepts/sui-move-concepts#entry-functions)
-
-```
 
 ## ✅ Latihan: Memahami Smart Contract Tamagosui (90 menit)
 
