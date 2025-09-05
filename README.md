@@ -11,7 +11,7 @@ Di akhir modul ini, Anda akan dapat:
 
 ---
 
-## Tamagotchi Smart Contract Workshop - Step by Step Implementation
+## Tamagotchi Smart Contract - Step by Step Implementation
 
 ## Prerequisites
 - Sui CLI terinstal
@@ -1638,3 +1638,1209 @@ fun emit_action(pet: &Pet, action: vector<u8>) {
 2. **Tantangan Gas:** Optimasi fungsi `wake_up_pet` untuk penggunaan gas yang lebih baik
 3. **Tantangan UX:** Desain sistem happiness pet yang mendorong interaksi harian
 4. **Tantangan Security:** Identifikasi potential attack vector di kontrak saat ini
+
+---
+
+# ⚛️ Building the Frontend (75 minutes)
+
+## Step 1: Setup Frontend Project
+
+```bash
+# Go back to root directory
+cd ..
+
+# Create React project with Vite
+npm create vite@latest tamagosui-ui -- --template react-ts
+cd tamagosui-ui
+```
+
+## Step 2: Install Dependencies
+
+```bash
+# Install all required packages
+npm install @mysten/dapp-kit @mysten/sui @tanstack/react-query @radix-ui/react-progress @radix-ui/react-separator @radix-ui/react-slot @radix-ui/react-tooltip @tailwindcss/vite class-variance-authority clsx lucide-react next-themes react-router-dom sonner tailwind-merge tailwindcss
+
+# Install dev dependencies
+npm install -D @types/node tw-animate-c
+```
+
+## Step 3: Configure Environment
+
+Create the file **`.env`** and add:
+
+```env
+VITE_PACKAGE_ID=YOUR_PACKAGE_ID_HERE
+```
+
+**⚠️ Replace `YOUR_PACKAGE_ID_HERE` with the Package ID from your contract deployment!**
+
+## Step 4: Setup Project Configuration
+
+### Update **`vite.config.ts`**:
+
+```typescript
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
+import tailwindcss from "@tailwindcss/vite";
+import path from "path";
+
+export default defineConfig({
+  plugins: [react(), tailwindcss()],
+  resolve: {
+    alias: {
+      "@": path.resolve(__dirname, "./src"),
+    },
+  },
+});
+```
+
+### Update **`tsconfig.app.json`**:
+
+```json
+{
+  "compilerOptions": {
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
+    "target": "ES2022",
+    "useDefineForClassFields": true,
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "skipLibCheck": true,
+
+    /* Bundler mode */
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "verbatimModuleSyntax": true,
+    "moduleDetection": "force",
+    "noEmit": true,
+    "jsx": "react-jsx",
+
+    /* Linting */
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "erasableSyntaxOnly": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedSideEffectImports": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  },
+  "include": ["src"]
+}
+```
+
+### Update **`tsconfig.json`**:
+
+```json
+{
+  "files": [],
+  "references": [
+    { "path": "./tsconfig.app.json" },
+    { "path": "./tsconfig.node.json" }
+  ],
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  }
+}
+```
+
+### Update **`src/vite-env.d.ts`**:
+
+```typescript
+/// <reference types="vite/client" />
+//
+interface ImportMetaEnv {
+  readonly VITE_PACKAGE_ID: string;
+}
+```
+
+## Step 5: Setup Styles
+
+Replace **`src/index.css`** content with:
+
+```css
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+:root {
+  --radius: 0.625rem;
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.145 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.145 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0 0);
+  --primary: oklch(0.205 0 0);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.97 0 0);
+  --secondary-foreground: oklch(0.205 0 0);
+  --muted: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.556 0 0);
+  --accent: oklch(0.97 0 0);
+  --accent-foreground: oklch(0.205 0 0);
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: oklch(0.922 0 0);
+  --input: oklch(0.922 0 0);
+  --ring: oklch(0.708 0 0);
+  --chart-1: oklch(0.646 0.222 41.116);
+  --chart-2: oklch(0.6 0.118 184.704);
+  --chart-3: oklch(0.398 0.07 227.392);
+  --chart-4: oklch(0.828 0.189 84.429);
+  --chart-5: oklch(0.769 0.188 70.08);
+  --sidebar: oklch(0.985 0 0);
+  --sidebar-foreground: oklch(0.145 0 0);
+  --sidebar-primary: oklch(0.205 0 0);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.97 0 0);
+  --sidebar-accent-foreground: oklch(0.205 0 0);
+  --sidebar-border: oklch(0.922 0 0);
+  --sidebar-ring: oklch(0.708 0 0);
+}
+
+.dark {
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.205 0 0);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.205 0 0);
+  --popover-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.922 0 0);
+  --primary-foreground: oklch(0.205 0 0);
+  --secondary: oklch(0.269 0 0);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.269 0 0);
+  --muted-foreground: oklch(0.708 0 0);
+  --accent: oklch(0.269 0 0);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.556 0 0);
+  --chart-1: oklch(0.488 0.243 264.376);
+  --chart-2: oklch(0.696 0.17 162.48);
+  --chart-3: oklch(0.769 0.188 70.08);
+  --chart-4: oklch(0.627 0.265 303.9);
+  --chart-5: oklch(0.645 0.246 16.439);
+  --sidebar: oklch(0.205 0 0);
+  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.488 0.243 264.376);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.269 0 0);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.556 0 0);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+```
+
+## Step 6: Create Project Structure
+
+```bash
+# Create all required directories
+mkdir -p src/{components/ui,constants,hooks,pages/home/components,providers,types,lib}
+```
+
+## Step 7: Setup Core Files
+
+### Create **`src/constants/contract.ts`**:
+
+```typescript
+export const PACKAGE_ID: string = import.meta.env.VITE_PACKAGE_ID;
+```
+
+### Create **`src/networkConfig.ts`**:
+
+```typescript
+import { getFullnodeUrl } from "@mysten/sui/client";
+import { createNetworkConfig } from "@mysten/dapp-kit";
+
+const { networkConfig, useNetworkVariable, useNetworkVariables } =
+  createNetworkConfig({
+    testnet: {
+      url: getFullnodeUrl("testnet"),
+    },
+    mainnet: {
+      url: getFullnodeUrl("mainnet"),
+    },
+  });
+
+export { useNetworkVariable, useNetworkVariables, networkConfig };
+```
+
+### Create **`src/types/Pet.ts`**:
+
+```typescript
+type PetStructGameData = {
+  coins: number;
+  experience: number;
+  level: number;
+};
+
+type PetStructStats = {
+  energy: number;
+  happiness: number;
+  hunger: number;
+};
+
+export type PetStruct = {
+  id: string;
+  name: string;
+  adopted_at: number;
+  image_url: string;
+  stats: PetStructStats;
+  game_data: PetStructGameData;
+
+  // Dynamic Fields
+  isSleeping: boolean;
+};
+
+export type PetAccessoryStruct = {
+  id: { id: string };
+  name: string;
+  image_url: string;
+};
+
+export type SuiWrappedDynamicField<T> = {
+  id: { id: string };
+  name: any;
+  value: {
+    fields: T;
+  };
+};
+
+export type RawPetStructFields = {
+  id: { id: string };
+  name: string;
+  image_url: string;
+  adopted_at: string;
+  stats: { fields: { energy: number; happiness: number; hunger: number } };
+  game_data: { fields: { coins: number; experience: number; level: number } };
+};
+```
+
+### Create **`src/lib/utils.ts`**:
+
+```typescript
+import { clsx, type ClassValue } from "clsx";
+import { twMerge } from "tailwind-merge";
+
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs));
+}
+```
+
+## Step 8: Create Providers
+
+### Create **`src/providers/index.tsx`**:
+
+```typescript
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { SuiClientProvider, WalletProvider } from '@mysten/dapp-kit';
+import { networkConfig } from '../networkConfig';
+import { ThemeProvider } from 'next-themes';
+
+const queryClient = new QueryClient();
+
+export default function Providers({ children }: { children: React.ReactNode }) {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <SuiClientProvider networks={networkConfig} defaultNetwork="testnet">
+        <WalletProvider autoConnect>
+          <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
+            {children}
+          </ThemeProvider>
+        </WalletProvider>
+      </SuiClientProvider>
+    </QueryClientProvider>
+  );
+}
+```
+
+## Step 9: Create Essential UI Components
+
+### Create **`src/components/ui/button.tsx`**:
+
+<details>
+<summary>📋 Click to expand Button component code</summary>
+
+```typescript
+import * as React from "react"
+import { Slot } from "@radix-ui/react-slot"
+import { cva, type VariantProps } from "class-variance-authority"
+
+import { cn } from "@/lib/utils"
+
+const buttonVariants = cva(
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+  {
+    variants: {
+      variant: {
+        default:
+          "bg-primary text-primary-foreground shadow hover:bg-primary/90",
+        destructive:
+          "bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90",
+        outline:
+          "border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground",
+        secondary:
+          "bg-secondary text-secondary-foreground shadow-sm hover:bg-secondary/80",
+        ghost: "hover:bg-accent hover:text-accent-foreground",
+        link: "text-primary underline-offset-4 hover:underline",
+      },
+      size: {
+        default: "h-9 px-4 py-2",
+        sm: "h-8 rounded-md px-3 text-xs",
+        lg: "h-10 rounded-md px-8",
+        icon: "h-9 w-9",
+      },
+    },
+    defaultVariants: {
+      variant: "default",
+      size: "default",
+    },
+  }
+)
+
+export interface ButtonProps
+  extends React.ButtonHTMLAttributes<HTMLButtonElement>,
+    VariantProps<typeof buttonVariants> {
+  asChild?: boolean
+}
+
+const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
+  ({ className, variant, size, asChild = false, ...props }, ref) => {
+    const Comp = asChild ? Slot : "button"
+    return (
+      <Comp
+        className={cn(buttonVariants({ variant, size, className }))}
+        ref={ref}
+        {...props}
+      />
+    )
+  }
+)
+Button.displayName = "Button"
+
+export { Button, buttonVariants }
+```
+
+</details>
+
+### Create **`src/components/ui/card.tsx`**:
+
+<details>
+<summary>📋 Click to expand Card component code</summary>
+
+```typescript
+import * as React from "react"
+
+import { cn } from "@/lib/utils"
+
+const Card = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement>
+>(({ className, ...props }, ref) => (
+  <div
+    ref={ref}
+    className={cn(
+      "rounded-xl border bg-card text-card-foreground shadow",
+      className
+    )}
+    {...props}
+  />
+))
+Card.displayName = "Card"
+
+const CardHeader = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement>
+>(({ className, ...props }, ref) => (
+  <div
+    ref={ref}
+    className={cn("flex flex-col space-y-1.5 p-6", className)}
+    {...props}
+  />
+))
+CardHeader.displayName = "CardHeader"
+
+const CardTitle = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement>
+>(({ className, ...props }, ref) => (
+  <div
+    ref={ref}
+    className={cn("font-semibold leading-none tracking-tight", className)}
+    {...props}
+  />
+))
+CardTitle.displayName = "CardTitle"
+
+const CardDescription = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement>
+>(({ className, ...props }, ref) => (
+  <div
+    ref={ref}
+    className={cn("text-sm text-muted-foreground", className)}
+    {...props}
+  />
+))
+CardDescription.displayName = "CardDescription"
+
+const CardContent = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement>
+>(({ className, ...props }, ref) => (
+  <div ref={ref} className={cn("p-6 pt-0", className)} {...props} />
+))
+CardContent.displayName = "CardContent"
+
+const CardFooter = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement>
+>(({ className, ...props }, ref) => (
+  <div
+    ref={ref}
+    className={cn("flex items-center p-6 pt-0", className)}
+    {...props}
+  />
+))
+CardFooter.displayName = "CardFooter"
+
+export { Card, CardHeader, CardFooter, CardTitle, CardDescription, CardContent }
+```
+
+</details>
+
+### Create **`src/components/ui/input.tsx`**:
+
+```typescript
+import * as React from "react"
+
+import { cn } from "@/lib/utils"
+
+const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
+  ({ className, type, ...props }, ref) => {
+    return (
+      <input
+        type={type}
+        className={cn(
+          "flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 md:text-sm",
+          className
+        )}
+        ref={ref}
+        {...props}
+      />
+    )
+  }
+)
+Input.displayName = "Input"
+
+export { Input }
+```
+
+### Create **`src/components/ui/sonner.tsx`**:
+
+```typescript
+import { useTheme } from "next-themes"
+import { Toaster as Sonner } from "sonner"
+
+type ToasterProps = React.ComponentProps<typeof Sonner>
+
+const Toaster = ({ ...props }: ToasterProps) => {
+  const { theme = "system" } = useTheme()
+
+  return (
+    <Sonner
+      theme={theme as ToasterProps["theme"]}
+      className="toaster group"
+      toastOptions={{
+        classNames: {
+          toast:
+            "group toast group-[.toaster]:bg-background group-[.toaster]:text-foreground group-[.toaster]:border-border group-[.toaster]:shadow-lg",
+          description: "group-[.toast]:text-muted-foreground",
+          actionButton:
+            "group-[.toast]:bg-primary group-[.toast]:text-primary-foreground",
+          cancelButton:
+            "group-[.toast]:bg-muted group-[.toast]:text-muted-foreground",
+        },
+      }}
+      {...props}
+    />
+  )
+}
+
+export { Toaster }
+```
+
+## Step 10: Create Core Hooks
+
+### Create **`src/hooks/useMutateAdoptPet.ts`**:
+
+```typescript
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useSignAndExecuteTransaction, useSuiClient } from "@mysten/dapp-kit";
+import { Transaction } from "@mysten/sui/transactions";
+import { PACKAGE_ID } from "@/constants/contract";
+import { toast } from "sonner";
+
+export function useMutateAdoptPet() {
+  const client = useSuiClient();
+  const queryClient = useQueryClient();
+  const { mutateAsync: signAndExecute } = useSignAndExecuteTransaction();
+
+  return useMutation({
+    mutationFn: async (name: string) => {
+      const tx = new Transaction();
+
+      tx.moveCall({
+        package: PACKAGE_ID,
+        module: "tamagosui",
+        function: "adopt_pet",
+        arguments: [
+          tx.pure.string(name),
+          tx.object("0x6"), // Clock object
+        ],
+      });
+
+      const result = await signAndExecute({ transaction: tx });
+      await client.waitForTransaction({ digest: result.digest });
+
+      return result;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["owned-pet"] });
+      toast.success("Pet adopted successfully!");
+    },
+    onError: (error) => {
+      console.error("Error adopting pet:", error);
+      toast.error("Failed to adopt pet");
+    },
+  });
+}
+```
+
+### Create **`src/hooks/useQueryOwnedPet.ts`**:
+
+<details>
+<summary>📋 Click to expand Query Pet hook code</summary>
+
+```typescript
+import { useQuery } from "@tanstack/react-query";
+import { useCurrentAccount, useSuiClient } from "@mysten/dapp-kit";
+import { PACKAGE_ID } from "@/constants/contract";
+import type { PetStruct, RawPetStructFields } from "@/types/Pet";
+
+export function useQueryOwnedPet() {
+  const client = useSuiClient();
+  const currentAccount = useCurrentAccount();
+
+  return useQuery({
+    queryKey: ["owned-pet", currentAccount?.address],
+    queryFn: async (): Promise<PetStruct | null> => {
+      if (!currentAccount?.address) return null;
+
+      const objects = await client.getOwnedObjects({
+        owner: currentAccount.address,
+        filter: {
+          StructType: `${PACKAGE_ID}::tamagosui::Pet`,
+        },
+        options: {
+          showContent: true,
+          showType: true,
+        },
+      });
+
+      if (objects.data.length === 0) return null;
+
+      const petObject = objects.data[0];
+      if (
+        !petObject.data?.content ||
+        petObject.data.content.dataType !== "moveObject"
+      ) {
+        return null;
+      }
+
+      const fields = petObject.data.content.fields as RawPetStructFields;
+
+      // Check if pet is sleeping by querying dynamic fields
+      const dynamicFields = await client.getDynamicFields({
+        parentId: fields.id.id,
+      });
+
+      const isSleeping = dynamicFields.data.some(
+        (field) => field.name.value === "sleep_started_at",
+      );
+
+      return {
+        id: fields.id.id,
+        name: fields.name,
+        image_url: fields.image_url,
+        adopted_at: parseInt(fields.adopted_at),
+        stats: {
+          energy: fields.stats.fields.energy,
+          happiness: fields.stats.fields.happiness,
+          hunger: fields.stats.fields.hunger,
+        },
+        game_data: {
+          coins: fields.game_data.fields.coins,
+          experience: fields.game_data.fields.experience,
+          level: fields.game_data.fields.level,
+        },
+        isSleeping,
+      };
+    },
+    enabled: !!currentAccount?.address,
+    refetchInterval: 5000, // Refetch every 5 seconds for real-time updates
+  });
+}
+```
+
+</details>
+
+### Create **`src/hooks/useMutateFeedPet.ts`**:
+
+```typescript
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useSignAndExecuteTransaction, useSuiClient } from "@mysten/dapp-kit";
+import { Transaction } from "@mysten/sui/transactions";
+import { PACKAGE_ID } from "@/constants/contract";
+import { toast } from "sonner";
+
+export function useMutateFeedPet() {
+  const client = useSuiClient();
+  const queryClient = useQueryClient();
+  const { mutateAsync: signAndExecute } = useSignAndExecuteTransaction();
+
+  return useMutation({
+    mutationFn: async (petId: string) => {
+      const tx = new Transaction();
+
+      tx.moveCall({
+        package: PACKAGE_ID,
+        module: "tamagosui",
+        function: "feed_pet",
+        arguments: [tx.object(petId)],
+      });
+
+      const result = await signAndExecute({ transaction: tx });
+      await client.waitForTransaction({ digest: result.digest });
+
+      return result;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["owned-pet"] });
+      toast.success("Pet fed successfully!");
+    },
+    onError: (error) => {
+      console.error("Error feeding pet:", error);
+      toast.error("Failed to feed pet");
+    },
+  });
+}
+```
+
+### Create similar hooks for other pet actions:
+
+**`src/hooks/useMutatePlayWithPet.ts`**, **`src/hooks/useMutateWorkForCoins.ts`**, **`src/hooks/useMutateLetPetSleep.ts`**, **`src/hooks/useMutateWakeUpPet.ts`** - (Following same pattern as feed pet, just change the function name)
+
+## Step 11: Create Main Components
+
+### Create **`src/components/Header.tsx`**:
+
+```typescript
+import { ConnectButton } from '@mysten/dapp-kit';
+
+export default function Header() {
+  return (
+    <header className="fixed top-0 left-0 right-0 z-50 bg-background border-b-4 border-primary shadow-[0_4px_0px_#000]">
+      <div className="container mx-auto px-4 py-4 flex justify-between items-center">
+        <h1 className="text-2xl font-bold uppercase">TamagoSui</h1>
+        <ConnectButton />
+      </div>
+    </header>
+  );
+}
+```
+
+### Create **`src/pages/home/AdoptComponent.tsx`**:
+
+```typescript
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useMutateAdoptPet } from "@/hooks/useMutateAdoptPet";
+
+export default function AdoptComponent() {
+  const [petName, setPetName] = useState("");
+  const { mutate: adoptPet, isPending } = useMutateAdoptPet();
+
+  const handleAdopt = () => {
+    if (petName.trim()) {
+      adoptPet(petName);
+    }
+  };
+
+  return (
+    <Card className="w-full max-w-md border-4 border-primary shadow-[8px_8px_0px_#000]">
+      <CardHeader>
+        <CardTitle className="text-center text-2xl uppercase">Adopt Your Pet</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div>
+          <Input
+            placeholder="Enter pet name"
+            value={petName}
+            onChange={(e) => setPetName(e.target.value)}
+            className="border-2 border-primary"
+          />
+        </div>
+        <Button
+          onClick={handleAdopt}
+          disabled={!petName.trim() || isPending}
+          className="w-full border-2 border-black shadow-[4px_4px_0px_#000] hover:shadow-[2px_2px_0px_#000] hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
+        >
+          {isPending ? "Adopting..." : "Adopt Pet"}
+        </Button>
+      </CardContent>
+    </Card>
+  );
+}
+```
+
+### Create **`src/pages/home/PetComponent.tsx`**:
+
+<details>
+<summary>📋 Click to expand Pet Dashboard component (simplified version)</summary>
+
+```typescript
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useMutateFeedPet } from "@/hooks/useMutateFeedPet";
+import { useMutatePlayWithPet } from "@/hooks/useMutatePlayWithPet";
+import { useMutateWorkForCoins } from "@/hooks/useMutateWorkForCoins";
+import { useMutateLetPetSleep } from "@/hooks/useMutateLetPetSleep";
+import { useMutateWakeUpPet } from "@/hooks/useMutateWakeUpPet";
+import type { PetStruct } from "@/types/Pet";
+
+type PetDashboardProps = {
+  pet: PetStruct;
+};
+
+export default function PetComponent({ pet }: PetDashboardProps) {
+  const { mutate: feedPet, isPending: isFeeding } = useMutateFeedPet();
+  const { mutate: playWithPet, isPending: isPlaying } = useMutatePlayWithPet();
+  const { mutate: workForCoins, isPending: isWorking } = useMutateWorkForCoins();
+  const { mutate: letPetSleep, isPending: isFallingAsleep } = useMutateLetPetSleep();
+  const { mutate: wakeUpPet, isPending: isWakingUp } = useMutateWakeUpPet();
+
+  return (
+    <div className="w-full max-w-4xl mx-auto space-y-6">
+      {/* Pet Display Card */}
+      <Card className="border-4 border-primary shadow-[8px_8px_0px_#000]">
+        <CardHeader>
+          <CardTitle className="text-2xl uppercase">{pet.name}</CardTitle>
+          <p className="text-lg">Level {pet.game_data.level} {pet.isSleeping ? "😴" : "😊"}</p>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {/* Pet Image */}
+            <div className="flex justify-center">
+              <img
+                src={pet.image_url}
+                alt={pet.name}
+                className="w-64 h-64 object-contain border-4 border-primary shadow-[4px_4px_0px_#000]"
+              />
+            </div>
+
+            {/* Pet Stats */}
+            <div className="space-y-4">
+              <div className="text-lg">💰 {pet.game_data.coins} coins</div>
+              <div className="text-lg">⭐ {pet.game_data.experience} XP</div>
+              <div className="text-lg">🔋 Energy: {pet.stats.energy}/100</div>
+              <div className="text-lg">❤️ Happiness: {pet.stats.happiness}/100</div>
+              <div className="text-lg">🍖 Hunger: {pet.stats.hunger}/100</div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Actions Card */}
+      <Card className="border-4 border-primary shadow-[4px_4px_0px_#000]">
+        <CardHeader>
+          <CardTitle className="uppercase">Pet Actions</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+            <Button
+              onClick={() => feedPet(pet.id)}
+              disabled={pet.isSleeping || isFeeding}
+              className="border-2 border-black shadow-[4px_4px_0px_#000]"
+            >
+              {isFeeding ? "Feeding..." : "Feed (5c)"}
+            </Button>
+
+            <Button
+              onClick={() => playWithPet(pet.id)}
+              disabled={pet.isSleeping || isPlaying}
+              className="border-2 border-black shadow-[4px_4px_0px_#000]"
+            >
+              {isPlaying ? "Playing..." : "Play"}
+            </Button>
+
+            <Button
+              onClick={() => workForCoins(pet.id)}
+              disabled={pet.isSleeping || isWorking}
+              className="border-2 border-black shadow-[4px_4px_0px_#000]"
+            >
+              {isWorking ? "Working..." : "Work"}
+            </Button>
+
+            {pet.isSleeping ? (
+              <Button
+                onClick={() => wakeUpPet(pet.id)}
+                disabled={isWakingUp}
+                className="border-2 border-black shadow-[4px_4px_0px_#000]"
+              >
+                {isWakingUp ? "Waking..." : "Wake Up"}
+              </Button>
+            ) : (
+              <Button
+                onClick={() => letPetSleep(pet.id)}
+                disabled={isFallingAsleep}
+                className="border-2 border-black shadow-[4px_4px_0px_#000]"
+              >
+                {isFallingAsleep ? "Sleeping..." : "Sleep"}
+              </Button>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+```
+
+</details>
+
+## Step 12: Create Main Pages
+
+### Create **`src/pages/home/index.tsx`**:
+
+```typescript
+import { useQueryOwnedPet } from "@/hooks/useQueryOwnedPet";
+import { useCurrentAccount } from "@mysten/dapp-kit";
+import AdoptComponent from "./AdoptComponent";
+import PetComponent from "./PetComponent";
+import Header from "@/components/Header";
+
+export default function HomePage() {
+  const currentAccount = useCurrentAccount();
+  const { data: ownedPet, isPending: isOwnedPetLoading } = useQueryOwnedPet();
+
+  return (
+    <div className="min-h-screen flex flex-col bg-secondary">
+      <Header />
+      <main className="flex-grow flex items-center justify-center p-4 pt-24">
+        {!currentAccount ? (
+          <div className="text-center p-8 border-4 border-primary bg-background shadow-[8px_8px_0px_#000]">
+            <h2 className="text-4xl uppercase">Please Connect Wallet</h2>
+          </div>
+        ) : isOwnedPetLoading ? (
+          <div className="text-center p-8 border-4 border-primary bg-background shadow-[8px_8px_0px_#000]">
+            <h2 className="text-4xl uppercase">Loading Pet...</h2>
+          </div>
+        ) : ownedPet ? (
+          <PetComponent pet={ownedPet} />
+        ) : (
+          <AdoptComponent />
+        )}
+      </main>
+    </div>
+  );
+}
+```
+
+### Update **`src/App.tsx`**:
+
+```typescript
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import Providers from "./providers";
+import HomePage from "./pages/home";
+import { Toaster } from "./components/ui/sonner";
+
+const router = createBrowserRouter([
+  {
+    path: "/",
+    element: <HomePage />,
+  },
+]);
+
+function App() {
+  return (
+    <Providers>
+      <RouterProvider router={router} />
+      <Toaster />
+    </Providers>
+  );
+}
+
+export default App;
+```
+
+### Update **`src/main.tsx`**:
+
+```typescript
+import { StrictMode } from 'react'
+import { createRoot } from 'react-dom/client'
+import './index.css'
+import App from './App.tsx'
+
+createRoot(document.getElementById('root')!).render(
+  <StrictMode>
+    <App />
+  </StrictMode>,
+)
+```
+
+## Step 13: Run the Application
+
+```bash
+# Start development server
+npm run dev
+```
+
+Open your browser to `http://localhost:5173` and you should see your TamagoSui app!
+
+---
+
+# 🎯 Module 3: Testing & Demo (15 minutes)
+
+## Live Demo Flow
+
+### 1. **Connect Wallet**
+
+- Connect your Sui wallet to testnet
+- Ensure you have test tokens
+
+### 2. **Adopt Pet**
+
+- Enter a pet name
+- Submit adoption transaction
+- Pet appears with initial stats
+
+### 3. **Interact with Pet**
+
+- **Feed**: Costs 5 coins, increases hunger
+- **Play**: Uses energy, increases happiness
+- **Work**: Uses energy/happiness, gains coins
+- **Sleep**: Pet sleeps, recovers energy over time
+- **Wake Up**: Calculate time-based stat changes
+
+### 4. **Observe Dynamic Fields**
+
+- Sleep state stored/removed dynamically
+- Pet image changes based on state
+- Real-time updates in UI
+
+---
+
+# 🎮 Key Gaming Features Demonstrated
+
+## 1. **Dynamic Fields in Action**
+
+### Sleep System:
+
+```move
+// When pet sleeps - add dynamic field
+dynamic_field::add(&mut pet.id, b"sleep_started_at", timestamp);
+
+// When pet wakes - remove dynamic field + calculate stats
+let sleep_time = dynamic_field::remove<String, u64>(&mut pet.id, key);
+```
+
+### Equipment System:
+
+```move
+// Store accessory in pet object
+dynamic_field::add(&mut pet.id, b"equipped_item", accessory);
+```
+
+## 2. **Object-Centric Benefits**
+
+- **True Ownership**: Pet NFT belongs to user
+- **Composability**: Pet can "own" accessories
+- **Flexibility**: Add features without schema changes
+- **Efficiency**: Pay only for storage you use
+
+## 3. **Real-time Gaming**
+
+- All stat changes happen in single transaction
+- No complex state synchronization needed
+- Immediate UI updates via React Query
+- Sub-second transaction finality
+
+---
+
+# 🏆 Workshop Summary
+
+## What We Built
+
+✅ **Complete Virtual Pet Game**  
+✅ **Dynamic Fields Implementation**  
+✅ **Object-Centric Architecture**  
+✅ **Real-time Frontend Integration**  
+✅ **Sui Gaming Best Practices**
+
+## Key Takeaways
+
+### For Developers:
+
+- **Dynamic Fields** = Flexible, efficient storage
+- **Object-Centric Model** = True ownership + composability
+- **Move Language** = Safe, resource-oriented programming
+- **Sui dApp Kit** = Easy blockchain integration
+
+### For Gaming:
+
+- **Lower Costs** = More sustainable game economies
+- **Real-time Updates** = Better user experience
+- **True Ownership** = Players own their assets
+- **Extensibility** = Easy to add new features
+
+---
+
+# 🚀 Next Steps
+
+## Immediate Actions:
+
+1. ✅ Complete the workshop implementation
+2. ✅ Deploy your contract to testnet
+3. ✅ Test all pet interactions
+4. ✅ Explore Sui Explorer for your transactions
+
+## Advanced Features to Add:
+
+- **Breeding System**: Combine pets to create new ones
+- **Marketplace**: Trade pets and accessories
+- **Battles**: Pet vs pet combat system
+- **Quests**: Story-driven gameplay
+- **Guilds**: Multiplayer features
+
+## Learning Resources:
+
+- 📚 [Sui Documentation](https://docs.sui.io)
+- 🎮 [Move Book](https://move-book.com)
+- 💬 [Sui Discord](https://discord.gg/sui)
+- 🐦 [Sui Twitter](https://twitter.com/SuiNetwork)
+- 🔍 [Sui Explorer](https://suiscan.xyz/testnet)
+
+---
+
+# ❓ Troubleshooting
+
+## Common Issues:
+
+### 1. **Package ID Error**
+
+```bash
+# Make sure .env.local has correct Package ID
+VITE_PACKAGE_ID=0x123abc...
+```
+
+### 2. **Build Errors**
+
+```bash
+# Clear node_modules and rebuild
+rm -rf node_modules package-lock.json
+npm install
+```
+
+### 3. **Transaction Failures**
+
+- Ensure wallet connected to testnet
+- Check sufficient gas balance
+- Verify contract deployed correctly
+
+### 4. **Dynamic Fields Not Working**
+
+- Check if pet exists in your wallet
+- Verify Package ID matches deployed contract
+- Ensure proper transaction completion
+
+---
+
+# 🎉 Congratulations!
+
+You've successfully built **TamagoSui** - a complete virtual pet game showcasing Sui's gaming advantages!
+
+**You now understand:**
+
+- ✅ Dynamic Fields for flexible game data
+- ✅ Object-centric architecture for true ownership
+- ✅ Move programming for secure smart contracts
+- ✅ Real-time blockchain gaming integration
+
+## Keep Building! 🚀
+
+The gaming industry is just getting started on blockchain. With Sui's unique features, you're well-equipped to build the next generation of on-chain games.
+
+**Happy Gaming on Sui! 🎮⚡**
+
+---
+
+_Workshop materials created for Sui Gaming Workshop_  
+_For questions: Join the [Sui Discord](https://discord.gg/sui) #developer-general_
