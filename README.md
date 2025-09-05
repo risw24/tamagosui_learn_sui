@@ -1643,6 +1643,486 @@ fun emit_action(pet: &Pet, action: vector<u8>) {
 
 # ⚛️ Building the Frontend (75 minutes)
 
+## Step 1: Setup Project Structure
+
+```bash
+# Create React project with Vite
+pnpm create vite@latest tamagosui-ui -- --template react-ts
+cd tamagosui-ui
+
+# Install dependencies
+pnpm install
+```
+
+## Step 2: Install Required Dependencies
+
+```bash
+# Core dependencies
+pnpm add @mysten/dapp-kit @mysten/sui.js @tanstack/react-query
+pnpm add @radix-ui/react-progress @radix-ui/react-separator @radix-ui/react-slot @radix-ui/react-tooltip
+pnpm add class-variance-authority clsx lucide-react next-themes
+pnpm add react-router-dom sonner tailwind-merge tailwindcss
+
+# Dev dependencies
+pnpm add -D @types/node autoprefixer postcss typescript
+```
+
+## Step 3: Configure Project Files
+
+### 1. Environment Setup (`/.env`)
+```env
+VITE_PACKAGE_ID=YOUR_PACKAGE_ID_HERE
+VITE_NETWORK=devnet
+```
+
+### 2. Vite Configuration (`/vite.config.ts`)
+```typescript
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react-swc'
+import path from 'path'
+
+export default defineConfig({
+  plugins: [react()],
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, './src'),
+    },
+  },
+})
+```
+
+### 3. TypeScript Configuration (`/tsconfig.json`)
+```json
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "useDefineForClassFields": true,
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "skipLibCheck": true,
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "jsx": "react-jsx",
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  },
+  "include": ["src"],
+  "references": [{ "path": "./tsconfig.node.json" }]
+}
+```
+
+### 4. Tailwind Configuration (`/components.json`)
+```json
+{
+  "$schema": "https://ui.shadcn.com/schema.json",
+  "style": "default",
+  "rsc": false,
+  "tsx": true,
+  "tailwind": {
+    "config": "tailwind.config.js",
+    "css": "src/index.css",
+    "baseColor": "slate",
+    "cssVariables": true,
+    "prefix": ""
+  },
+  "aliases": {
+    "components": "@/components",
+    "utils": "@/lib/utils"
+  }
+}
+```
+
+## Step 4: Core Types & Constants
+
+### 1. Pet Types (`/src/types/Pet.ts`)
+```typescript
+export type PetStats = {
+  energy: number;
+  hunger: number;
+};
+
+export type PetGameData = {
+  coins: number;
+  level: number;
+};
+
+export type Pet = {
+  id: string;
+  type: string;
+  name: string;
+  adoptedAt: number;
+  stats: PetStats;
+  gameData: PetGameData;
+  image: string;
+};
+```
+
+### 2. Contract Constants (`/src/constants/contract.ts`)
+```typescript
+export const CLOCK_ADDRESS = "0x6";
+export const MODULE_NAME = "tamagosui";
+export const PACKAGE_ID = import.meta.env.VITE_PACKAGE_ID;
+```
+
+## Step 5: Setup Network Configuration
+
+Create `/src/networkConfig.ts`:
+```typescript
+import { getFullnodeUrl } from "@mysten/sui.js/client";
+
+export const networkConfig = {
+  devnet: {
+    url: getFullnodeUrl("devnet"),
+  },
+  testnet: {
+    url: getFullnodeUrl("testnet"),
+  },
+  mainnet: {
+    url: getFullnodeUrl("mainnet"),
+  },
+};
+```
+
+## Step 6: Implement Core Components
+
+### 1. Button Component (`/src/components/ui/button.tsx`)
+```typescript
+import * as React from "react"
+import { Slot } from "@radix-ui/react-slot"
+import { cva, type VariantProps } from "class-variance-authority"
+import { cn } from "@/lib/utils"
+
+const buttonVariants = cva(
+  "inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50",
+  {
+    variants: {
+      variant: {
+        default: "bg-primary text-primary-foreground shadow hover:bg-primary/90",
+        destructive: "bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90",
+        outline: "border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground",
+        secondary: "bg-secondary text-secondary-foreground shadow-sm hover:bg-secondary/80",
+        ghost: "hover:bg-accent hover:text-accent-foreground",
+        link: "text-primary underline-offset-4 hover:underline",
+      },
+      size: {
+        default: "h-9 px-4 py-2",
+        sm: "h-8 rounded-md px-3 text-xs",
+        lg: "h-10 rounded-md px-8",
+        icon: "h-9 w-9",
+      },
+    },
+    defaultVariants: {
+      variant: "default",
+      size: "default",
+    },
+  }
+)
+
+export interface ButtonProps
+  extends React.ButtonHTMLAttributes<HTMLButtonElement>,
+    VariantProps<typeof buttonVariants> {
+  asChild?: boolean
+}
+
+const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
+  ({ className, variant, size, asChild = false, ...props }, ref) => {
+    const Comp = asChild ? Slot : "button"
+    return (
+      <Comp
+        className={cn(buttonVariants({ variant, size, className }))}
+        ref={ref}
+        {...props}
+      />
+    )
+  }
+)
+Button.displayName = "Button"
+
+export { Button, buttonVariants }
+```
+
+### 2. Header Component (`/src/components/Header.tsx`)
+```typescript
+import { ConnectButton } from "@mysten/dapp-kit";
+
+export default function Header() {
+  return (
+    <header className="flex items-center justify-between px-6 py-4 border-b">
+      <h1 className="text-2xl font-bold">Tamagosui</h1>
+      <ConnectButton />
+    </header>
+  );
+}
+```
+
+## Step 7: Setup Main Pages
+
+### 1. Home Page (`/src/pages/home/index.tsx`)
+```typescript
+import { useCurrentAccount } from "@mysten/dapp-kit";
+import AdoptComponent from "./AdoptComponent";
+import PetComponent from "./PetComponent";
+import { useQueryOwnedPet } from "@/hooks/useQueryOwnedPet";
+
+export default function HomePage() {
+  const account = useCurrentAccount();
+  const { data: pet } = useQueryOwnedPet(account?.address);
+
+  if (!account) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[80vh] gap-4">
+        <h2 className="text-2xl font-bold">Please connect your wallet</h2>
+      </div>
+    );
+  }
+
+  return pet ? <PetComponent pet={pet} /> : <AdoptComponent />;
+}
+```
+
+### 2. Adopt Component (`/src/pages/home/AdoptComponent.tsx`)
+```typescript
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { useMutateAdoptPet } from "@/hooks/useMutateAdoptPet";
+import { useState } from "react";
+
+export default function AdoptComponent() {
+  const [name, setName] = useState("");
+  const { mutate: adoptPet, isPending } = useMutateAdoptPet();
+
+  return (
+    <div className="flex flex-col items-center justify-center min-h-[80vh] gap-4">
+      <h2 className="text-2xl font-bold">Adopt a Pet</h2>
+      <div className="flex gap-2">
+        <Input
+          placeholder="Pet name"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+        />
+        <Button
+          disabled={!name || isPending}
+          onClick={() => adoptPet(name)}
+        >
+          {isPending ? "Adopting..." : "Adopt"}
+        </Button>
+      </div>
+    </div>
+  );
+}
+```
+
+### 3. Pet Component (`/src/pages/home/PetComponent.tsx`)
+```typescript
+import { Card } from "@/components/ui/card";
+import { Pet } from "@/types/Pet";
+import { StatDisplay } from "./components/StatDisplay";
+import { ActionButton } from "./components/ActionButton";
+import { Wardrobe } from "./components/Wardrobe";
+
+interface Props {
+  pet: Pet;
+}
+
+export default function PetComponent({ pet }: Props) {
+  return (
+    <div className="flex flex-col gap-6">
+      <Card className="p-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="flex flex-col gap-4">
+            <img
+              src={pet.image}
+              alt={pet.name}
+              className="w-full aspect-square object-contain"
+            />
+            <h2 className="text-2xl font-bold text-center">{pet.name}</h2>
+          </div>
+          
+          <div className="flex flex-col gap-4">
+            <StatDisplay pet={pet} />
+            <div className="grid grid-cols-2 gap-2">
+              <ActionButton action="feed" petId={pet.id} />
+              <ActionButton action="play" petId={pet.id} />
+              <ActionButton action="work" petId={pet.id} />
+              <ActionButton action="sleep" petId={pet.id} />
+            </div>
+          </div>
+        </div>
+      </Card>
+      
+      <Wardrobe petId={pet.id} />
+    </div>
+  );
+}
+```
+
+## Step 8: Implement Core Hooks
+
+### 1. Pet Query Hook (`/src/hooks/useQueryOwnedPet.ts`)
+```typescript
+import { useQuery } from "@tanstack/react-query";
+import { SuiClient } from "@mysten/sui.js/client";
+import { useCurrentAccount, useSuiClient } from "@mysten/dapp-kit";
+import { PACKAGE_ID } from "@/constants/contract";
+
+export function useQueryOwnedPet(address?: string) {
+  const client = useSuiClient();
+  
+  return useQuery({
+    queryKey: ["ownedPet", address],
+    queryFn: () => getPet(client, address!),
+    enabled: !!address,
+  });
+}
+
+async function getPet(client: SuiClient, address: string) {
+  const { data } = await client.getOwnedObjects({
+    owner: address,
+    filter: {
+      Package: PACKAGE_ID
+    },
+    options: {
+      showType: true,
+      showContent: true,
+    }
+  });
+
+  return data[0]?.data;
+}
+```
+
+### 2. Pet Actions Hook (`/src/hooks/useMutateFeedPet.ts`)
+```typescript
+import { useSuiClient, useSignAndExecuteTransactionBlock } from "@mysten/dapp-kit";
+import { TransactionBlock } from "@mysten/sui.js/transactions";
+import { PACKAGE_ID, MODULE_NAME } from "@/constants/contract";
+
+export function useMutateFeedPet() {
+  const { mutate } = useSignAndExecuteTransactionBlock();
+  
+  return {
+    mutate: (petId: string) => {
+      const txb = new TransactionBlock();
+      
+      txb.moveCall({
+        target: `${PACKAGE_ID}::${MODULE_NAME}::feed_pet`,
+        arguments: [txb.object(petId)],
+      });
+      
+      return mutate({
+        transactionBlock: txb,
+      });
+    },
+  };
+}
+```
+
+### 3. Accessory Management Hook (`/src/hooks/useMutateEquipAccessory.ts`)
+```typescript
+import { useSuiClient, useSignAndExecuteTransactionBlock } from "@mysten/dapp-kit";
+import { TransactionBlock } from "@mysten/sui.js/transactions";
+import { PACKAGE_ID, MODULE_NAME } from "@/constants/contract";
+
+export function useMutateEquipAccessory() {
+  const { mutate } = useSignAndExecuteTransactionBlock();
+  
+  return {
+    mutate: ({ petId, accessoryId }: { petId: string; accessoryId: string }) => {
+      const txb = new TransactionBlock();
+      
+      txb.moveCall({
+        target: `${PACKAGE_ID}::${MODULE_NAME}::equip_accessory`,
+        arguments: [
+          txb.object(petId),
+          txb.object(accessoryId)
+        ],
+      });
+      
+      return mutate({
+        transactionBlock: txb,
+      });
+    },
+  };
+}
+```
+
+## Step 9: App Entry Points
+
+### 1. Main App Component (`/src/App.tsx`)
+```typescript
+import { SuiClientProvider, WalletProvider } from "@mysten/dapp-kit";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { networkConfig } from "./networkConfig";
+import Header from "@/components/Header";
+import HomePage from "@/pages/home";
+
+const queryClient = new QueryClient();
+
+function App() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <SuiClientProvider networks={networkConfig} defaultNetwork="devnet">
+        <WalletProvider>
+          <div className="min-h-screen">
+            <Header />
+            <main className="container mx-auto py-4">
+              <HomePage />
+            </main>
+          </div>
+        </WalletProvider>
+      </SuiClientProvider>
+    </QueryClientProvider>
+  );
+}
+
+export default App;
+```
+
+### 2. Entry Point (`/src/main.tsx`)
+```typescript
+import React from "react";
+import ReactDOM from "react-dom/client";
+import App from "./App";
+import "./index.css";
+
+ReactDOM.createRoot(document.getElementById("root")!).render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>
+);
+```
+
+## Step 10: Running the Application
+
+```bash
+# Start the development server
+pnpm dev
+
+# Build for production
+pnpm build
+```
+
+## ✅ Additional Components and Features
+
+Your frontend now supports:
+- Wallet connection using @mysten/dapp-kit
+- Pet adoption and management
+- Real-time stat tracking
+- Game actions (feed, play, work, sleep)
+- Accessory system
+- Responsive UI with Tailwind CSS
+- Type safety with TypeScript
+- State management with React Query
+
 ## Step 1: Setup Frontend Project
 
 ```bash
