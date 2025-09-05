@@ -20,12 +20,38 @@ Di akhir modul ini, Anda akan dapat:
 
 ---
 
-## Step 1: Setup Project dan Module Declaration
+## Step 1: Create Project Structure
 
 ```bash
-sui move new tamagosui
+# Create main project directory
+mkdir tamagosui
 cd tamagosui
+
+# Create contract directory
+sui move new tamagosui-contract
+cd tamagosui-contract
 ```
+
+## Step 2: Configure `Move.toml`:
+
+```toml
+[package]
+name = "tamagosui"
+edition = "2024.beta"
+
+[dependencies]
+Sui = { git = "https://github.com/MystenLabs/sui.git", subdir = "crates/sui-framework/packages/sui-framework", rev = "testnet" }
+
+[addresses]
+tamagosui = "0x0"
+
+[dev-dependencies]
+
+[dev-addresses]
+
+```
+
+## Step 3: Implementasi Smart Contract Tamagosui
 
 Buat file `sources/tamagosui.move` dan mulai dengan deklarasi module dan import yang diperlukan:
 
@@ -35,9 +61,8 @@ module 0x0::tamagosui;
 use std::string::{Self, String};
 use sui::{clock::Clock, display, dynamic_field, event, package};
 ```
----
 
-## Step 2: Constants dan Error Codes
+## Step 4: Constants dan Error Codes
 
 Tambahkan konstanta untuk error handling dan asset URLs:
 
@@ -67,9 +92,7 @@ const EQUIPPED_ITEM_KEY: vector<u8> = b"equipped_item";
 const SLEEP_STARTED_AT_KEY: vector<u8> = b"sleep_started_at";
 ```
 
----
-
-## Step 3: Game Balance Configuration
+## Step 5: Game Balance Configuration
 
 Tambahkan struct untuk mengatur balance game:
 
@@ -138,9 +161,7 @@ fun get_game_balance(): GameBalance {
 }
 ```
 
----
-
-## Step 4: Core Data Structures
+## Step 6: Core Data Structures
 
 Definisikan struct utama untuk Pet dan komponennya:
 
@@ -175,9 +196,7 @@ public struct PetGameData has store {
 }
 ```
 
----
-
-## Step 5: Events
+## Step 7: Events
 
 Tambahkan struct untuk events:
 
@@ -198,9 +217,7 @@ public struct PetAction has copy, drop {
 }
 ```
 
----
-
-## Step 6: Module Initialization
+## Step 8: Module Initialization
 
 Implement fungsi `init` untuk setup display dan publisher:
 
@@ -244,9 +261,7 @@ fun init(witness: TAMAGOSUI, ctx: &mut TxContext) {
 }
 ```
 
----
-
-## Step 7: Pet Adoption Function
+## Step 9: Pet Adoption Function
 
 Implement fungsi untuk mengadopsi pet:
 
@@ -291,9 +306,7 @@ public entry fun adopt_pet(
 }
 ```
 
----
-
-## Step 8: Basic Pet Care Functions
+## Step 10: Basic Pet Care Functions
 
 Implement fungsi dasar untuk merawat pet:
 
@@ -339,9 +352,7 @@ public entry fun play_with_pet(pet: &mut Pet) {
 }
 ```
 
----
-
-## Step 9: Work and Level System
+## Step 11: Work and Level System
 
 ### Work Function:
 ```move
@@ -395,9 +406,7 @@ public entry fun check_and_level_up(pet: &mut Pet) {
 }
 ```
 
----
-
-## Step 10: Sleep System
+## Step 12: Sleep System
 
 ### Sleep Functions:
 ```move
@@ -454,9 +463,7 @@ public entry fun wake_up_pet(pet: &mut Pet, clock: &Clock) {
 }
 ```
 
----
-
-## Step 11: Accessory System
+## Step 13: Accessory System
 
 ### Mint dan Equip Accessories:
 ```move
@@ -498,9 +505,7 @@ public entry fun unequip_accessory(pet: &mut Pet, ctx: &mut TxContext) {
 }
 ```
 
----
-
-## Step 12: Helper Functions
+## Step 14: Helper Functions
 
 ### Emit Action dan Update Image:
 ```move
@@ -541,9 +546,7 @@ fun update_pet_image(pet: &mut Pet) {
 }
 ```
 
----
-
-## Step 13: View Functions
+## Step 15: View Functions
 
 Tambahkan fungsi untuk membaca data pet:
 
@@ -571,9 +574,7 @@ public fun is_sleeping(pet: &Pet): bool {
 }
 ```
 
----
-
-## Step 14: Test Function
+## Step 16: Test Function
 
 Tambahkan fungsi untuk testing:
 
