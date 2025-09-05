@@ -36,8 +36,8 @@ VITE_PACKAGE_ID=YOUR_PACKAGE_ID_HERE
 
 ## Step 4: Setup Project Configuration
 
-
 ### Create **`components.json`**:
+
 ```typescript
 {
   "$schema": "https://ui.shadcn.com/schema.json",
@@ -65,10 +65,10 @@ VITE_PACKAGE_ID=YOUR_PACKAGE_ID_HERE
 ### Update **`vite.config.ts`**:
 
 ```typescript
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
-import tailwindcss from '@tailwindcss/vite'
-import path from "path"
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
+import tailwindcss from "@tailwindcss/vite";
+import path from "path";
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
@@ -77,10 +77,11 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
-})
+});
 ```
 
 ### Update **tsconfig.app.json`**
+
 ```json
 {
   "compilerOptions": {
@@ -94,7 +95,7 @@ export default defineConfig({
     /* Bundler mode */
     "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,
-    "verbatimModuleSyntax": true,
+    "verbatimModuleSyntax": false,
     "moduleDetection": "force",
     "noEmit": true,
     "jsx": "react-jsx",
@@ -116,6 +117,7 @@ export default defineConfig({
 ```
 
 ### Update **`/tsconfig.json`**
+
 ```json
 {
   "files": [],
@@ -133,6 +135,7 @@ export default defineConfig({
 ```
 
 ### Update (`/src/env.d.ts`):
+
 ```typescript
 /// <reference types="vite/client" />
 //
@@ -457,8 +460,9 @@ export default function Providers({ children }: AppProviderProps) {
 ```
 
 ## Step 9: Create Essential UI Components
+
 ```
-npx shadcn@latest add button,card,input,progress,separator,sooner,tooltip 
+npx shadcn@latest add button card input progress separator sonner tooltip
 ```
 
 ## Step 10: Create Core Hooks
@@ -524,7 +528,7 @@ export function useMutateAdoptPet() {
 }
 ```
 
-### Create **`src/hooks/useMutateCheckLevelUp.ts`**:
+### Create **`src/hooks/useMutateCheckLevel.ts`**:
 
 ```typescript
 import {
@@ -584,7 +588,7 @@ export function useMutateCheckAndLevelUp() {
 }
 ```
 
-### Create **`src/hooks/UseMutateEquipAccessory.ts`**:
+### Create **`src/hooks/useMutateEquipAccessory.ts`**:
 
 ```typescript
 import {
@@ -887,7 +891,7 @@ export function useMutatePlayWithPet() {
 }
 ```
 
-### Create **`src/hooks/UseMutateUnequipAccessory.ts`**:
+### Create **`src/hooks/useMutateUnequipAccessory.ts`**:
 
 ```typescript
 import {
@@ -1247,8 +1251,6 @@ export function useQueryOwnedAccessories() {
 }
 ```
 
-
-
 ### Create **`src/hooks/useQueryOwnedPet.ts`**:
 
 ```typescript
@@ -1302,7 +1304,6 @@ export function useQueryOwnedPet() {
 }
 ```
 
-
 ## Step 11: Create Main Components
 
 ### Create **`src/components/Header.tsx`**:
@@ -1322,8 +1323,8 @@ export default function Header() {
 }
 ```
 
-
 ### Create **`src/pages/home/components/ActionButton.tsx`**:
+
 ```typescript
 import type { ReactNode } from "react";
 import { Loader2Icon } from "lucide-react";
@@ -1364,6 +1365,7 @@ export function ActionButton({
 ```
 
 ### Create **`src/pages/home/components/StatDisplay.tsx`**:
+
 ```typescript
 import { Progress } from "@/components/ui/progress";
 import {
@@ -1399,7 +1401,8 @@ export function StatDisplay({ icon, label, value }: StatDisplayProps) {
 }
 ```
 
-### Create **`src/pages/home/components/ActionButton.tsx`**:
+### Create **`src/pages/home/components/Wardrobe.tsx`**:
+
 ```typescript
 import { GlassesIcon, Loader2Icon, WarehouseIcon } from "lucide-react";
 
@@ -1979,23 +1982,27 @@ Open your browser to `http://localhost:5173` and you should see your TamagoSui a
 ## Live Demo Flow
 
 ### 1. **Connect Wallet**
+
 - Connect your Sui wallet to testnet
 - Ensure you have test tokens
 
 ### 2. **Adopt Pet**
+
 - Enter a pet name
 - Submit adoption transaction
 - Pet appears with initial stats
 
 ### 3. **Interact with Pet**
+
 - **Feed**: Costs 5 coins, increases hunger (+20), gains XP (+5)
 - **Play**: Uses energy (-15), hunger (-15), increases happiness (+25), gains XP (+10)
 - **Work**: Uses energy (-20), happiness (-20), hunger (-20), gains coins (+10), XP (+15)
 - **Sleep**: Pet sleeps, recovers energy over time (1 per second)
 - **Wake Up**: Calculate time-based stat changes
-- **Level Up**: Available when XP ≥ level * 100
+- **Level Up**: Available when XP ≥ level \* 100
 
 ### 4. **Observe Dynamic Fields**
+
 - Sleep state stored/removed dynamically
 - Pet image changes based on state and level
 - Real-time updates in UI
@@ -2008,6 +2015,7 @@ Open your browser to `http://localhost:5173` and you should see your TamagoSui a
 ## 1. **Dynamic Fields in Action**
 
 ### Sleep System:
+
 ```move
 // When pet sleeps - add dynamic field
 dynamic_field::add(&mut pet.id, b"sleep_started_at", timestamp);
@@ -2017,6 +2025,7 @@ let sleep_time = dynamic_field::remove<String, u64>(&mut pet.id, key);
 ```
 
 ### Equipment System:
+
 ```move
 // Store accessory in pet object
 dynamic_field::add(&mut pet.id, b"equipped_item", accessory);
@@ -2046,17 +2055,19 @@ dynamic_field::add(&mut pet.id, b"equipped_item", accessory);
 ✅ **Dynamic Fields Implementation**  
 ✅ **Object-Centric Architecture**  
 ✅ **Real-time Frontend Integration**  
-✅ **Sui Gaming Best Practices**  
+✅ **Sui Gaming Best Practices**
 
 ## Key Takeaways
 
 ### For Developers:
+
 - **Dynamic Fields** = Flexible, efficient storage
 - **Object-Centric Model** = True ownership + composability
 - **Move Language** = Safe, resource-oriented programming
 - **Sui dApp Kit** = Easy blockchain integration
 
 ### For Gaming:
+
 - **Lower Costs** = More sustainable game economies
 - **Real-time Updates** = Better user experience
 - **True Ownership** = Players own their assets
@@ -2067,12 +2078,14 @@ dynamic_field::add(&mut pet.id, b"equipped_item", accessory);
 # 🚀 Next Steps
 
 ## Immediate Actions:
+
 1. ✅ Complete the workshop implementation
 2. ✅ Deploy your contract to testnet
 3. ✅ Test all pet interactions
 4. ✅ Explore Sui Explorer for your transactions
 
 ## Advanced Features to Add:
+
 - **Breeding System**: Combine pets to create new ones
 - **Marketplace**: Trade pets and accessories
 - **Battles**: Pet vs pet combat system
@@ -2080,6 +2093,7 @@ dynamic_field::add(&mut pet.id, b"equipped_item", accessory);
 - **Guilds**: Multiplayer features
 
 ## Learning Resources:
+
 - 📚 [Sui Documentation](https://docs.sui.io)
 - 🎮 [Move Book](https://move-book.com)
 - 💬 [Sui Discord](https://discord.gg/sui)
@@ -2093,12 +2107,14 @@ dynamic_field::add(&mut pet.id, b"equipped_item", accessory);
 ## Common Issues:
 
 ### 1. **Package ID Error**
+
 ```bash
 # Make sure .env.local has correct Package ID
 VITE_PACKAGE_ID=0x123abc...
 ```
 
 ### 2. **Build Errors**
+
 ```bash
 # Clear node_modules and rebuild
 rm -rf node_modules package-lock.json
@@ -2106,18 +2122,22 @@ npm install
 ```
 
 ### 3. **Transaction Failures**
+
 - Ensure wallet connected to testnet
 - Check sufficient gas balance
 - Verify contract deployed correctly
 - Check pet has enough energy/coins for actions
 
 ### 4. **Dynamic Fields Not Working**
+
 - Check if pet exists in your wallet
 - Verify Package ID matches deployed contract
 - Ensure proper transaction completion
 
 ### 5. **Missing Hooks**
+
 Remember to create all the missing hook files:
+
 - `useMutatePlayWithPet.ts`
 - `useMutateWorkForCoins.ts`
 - `useMutateLetPetSleep.ts`
@@ -2131,6 +2151,7 @@ Remember to create all the missing hook files:
 You've successfully built **TamagoSui** - a complete virtual pet game showcasing Sui's gaming advantages!
 
 **You now understand:**
+
 - ✅ Dynamic Fields for flexible game data
 - ✅ Object-centric architecture for true ownership
 - ✅ Move programming for secure smart contracts
@@ -2143,4 +2164,3 @@ The gaming industry is just getting started on blockchain. With Sui's unique fea
 **Happy Gaming on Sui! 🎮⚡**
 
 ---
-

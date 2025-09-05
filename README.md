@@ -3,7 +3,9 @@
 ## 🚀 Modul 3: Advanced Smart Contract Development with Tamagosui
 
 ### 🎯 Tujuan Pembelajaran
+
 Di akhir modul ini, Anda akan dapat:
+
 - Mempelajari fitur-fitur lanjutan Sui dan Move melalui pembuatan game pet virtual ala Tamagotchi
 - Memahami ownership, dynamic fields, dan logika berbasis waktu dalam praktik
 - Membangun sistem pet virtual lengkap dengan metadata dan aksesori
@@ -14,6 +16,7 @@ Di akhir modul ini, Anda akan dapat:
 ## Tamagotchi Smart Contract - Step by Step Implementation
 
 ## Prerequisites
+
 - Sui CLI terinstal
 - Text editor (VS Code dengan Move extension direkomendasikan)
 - Pemahaman dasar tentang blockchain dan Move language
@@ -40,7 +43,7 @@ name = "tamagosui"
 edition = "2024.beta"
 
 [dependencies]
-Sui = { git = "https://github.com/MystenLabs/sui.git", subdir = "crates/sui-framework/packages/sui-framework", rev = "testnet" }
+Sui = { git = "https://github.com/MystenLabs/sui.git", subdir = "crates/sui-framework/packages/sui-framework", rev = "framework/testnet" }
 
 [addresses]
 tamagosui = "0x0"
@@ -100,25 +103,25 @@ Tambahkan struct untuk mengatur balance game:
 // === Game Balance ===
 public struct GameBalance has copy, drop {
     max_stat: u8,
-    
+
     // Feed settings
     feed_coins_cost: u64,
     feed_experience_gain: u64,
     feed_hunger_gain: u8,
-    
+
     // Play settings
     play_energy_loss: u8,
     play_hunger_loss: u8,
     play_experience_gain: u64,
     play_happiness_gain: u8,
-    
+
     // Work settings
     work_energy_loss: u8,
     work_happiness_loss: u8,
     work_hunger_loss: u8,
     work_coins_gain: u64,
     work_experience_gain: u64,
-    
+
     // Sleep settings (in milliseconds)
     sleep_energy_gain_ms: u64,
     sleep_happiness_loss_ms: u64,
@@ -131,18 +134,18 @@ public struct GameBalance has copy, drop {
 fun get_game_balance(): GameBalance {
     GameBalance {
         max_stat: 100,
-        
+
         // Feed
         feed_coins_cost: 5,
         feed_experience_gain: 5,
         feed_hunger_gain: 20,
-        
+
         // Play
         play_energy_loss: 15,
         play_hunger_loss: 15,
         play_experience_gain: 10,
         play_happiness_gain: 25,
-        
+
         // Work
         work_energy_loss: 20,
         work_hunger_loss: 20,
@@ -154,7 +157,7 @@ fun get_game_balance(): GameBalance {
         sleep_energy_gain_ms: 1000,    // 1 energy per second
         sleep_happiness_loss_ms: 700, // 1 happiness loss per 0.7 seconds
         sleep_hunger_loss_ms: 500,    // 1 hunger loss per 0.5 seconds
-        
+
         // Level
         exp_per_level: 100,
     }
@@ -311,6 +314,7 @@ public entry fun adopt_pet(
 Implement fungsi dasar untuk merawat pet:
 
 ### Feed Pet Function:
+
 ```move
 public entry fun feed_pet(pet: &mut Pet) {
     assert!(!is_sleeping(pet), E_PET_IS_ASLEEP);
@@ -323,8 +327,8 @@ public entry fun feed_pet(pet: &mut Pet) {
     pet.game_data.coins = pet.game_data.coins - gb.feed_coins_cost;
     pet.game_data.experience = pet.game_data.experience + gb.feed_experience_gain;
     pet.stats.hunger = if (pet.stats.hunger + gb.feed_hunger_gain > gb.max_stat)
-        gb.max_stat 
-    else 
+        gb.max_stat
+    else
         pet.stats.hunger + gb.feed_hunger_gain;
 
     emit_action(pet, b"fed");
@@ -332,6 +336,7 @@ public entry fun feed_pet(pet: &mut Pet) {
 ```
 
 ### Play with Pet Function:
+
 ```move
 public entry fun play_with_pet(pet: &mut Pet) {
     assert!(!is_sleeping(pet), E_PET_IS_ASLEEP);
@@ -343,9 +348,9 @@ public entry fun play_with_pet(pet: &mut Pet) {
     pet.stats.energy = pet.stats.energy - gb.play_energy_loss;
     pet.stats.hunger = pet.stats.hunger - gb.play_hunger_loss;
     pet.game_data.experience = pet.game_data.experience + gb.play_experience_gain;
-    pet.stats.happiness = if (pet.stats.happiness + gb.play_happiness_gain > gb.max_stat) 
-        gb.max_stat 
-    else 
+    pet.stats.happiness = if (pet.stats.happiness + gb.play_happiness_gain > gb.max_stat)
+        gb.max_stat
+    else
         pet.stats.happiness + gb.play_happiness_gain;
 
     emit_action(pet, b"played");
@@ -355,6 +360,7 @@ public entry fun play_with_pet(pet: &mut Pet) {
 ## Step 11: Work and Level System
 
 ### Work Function:
+
 ```move
 public entry fun work_for_coins(pet: &mut Pet) {
     assert!(!is_sleeping(pet), E_PET_IS_ASLEEP);
@@ -364,18 +370,18 @@ public entry fun work_for_coins(pet: &mut Pet) {
     assert!(pet.stats.energy >= gb.work_energy_loss, E_PET_TOO_TIRED);
     assert!(pet.stats.happiness >= gb.work_happiness_loss, E_PET_NOT_HUNGRY);
     assert!(pet.stats.hunger >= gb.work_hunger_loss, E_PET_TOO_HUNGRY);
-    
+
     pet.stats.energy = if (pet.stats.energy >= gb.work_energy_loss)
         pet.stats.energy - gb.work_energy_loss
-    else 
+    else
         0;
     pet.stats.happiness = if (pet.stats.happiness >= gb.work_happiness_loss)
         pet.stats.happiness - gb.work_happiness_loss
-    else 
+    else
         0;
     pet.stats.hunger = if (pet.stats.hunger >= gb.work_hunger_loss)
         pet.stats.hunger - gb.work_hunger_loss
-    else 
+    else
         0;
     pet.game_data.coins = pet.game_data.coins + gb.work_coins_gain;
     pet.game_data.experience = pet.game_data.experience + gb.work_experience_gain;
@@ -385,6 +391,7 @@ public entry fun work_for_coins(pet: &mut Pet) {
 ```
 
 ### Level Up Function:
+
 ```move
 public entry fun check_and_level_up(pet: &mut Pet) {
     assert!(!is_sleeping(pet), E_PET_IS_ASLEEP);
@@ -398,7 +405,7 @@ public entry fun check_and_level_up(pet: &mut Pet) {
     // Level up
     pet.game_data.level = pet.game_data.level + 1;
     pet.game_data.experience = pet.game_data.experience - required_exp;
-    
+
     // Update image based on level and equipped accessory
     update_pet_image(pet);
 
@@ -409,6 +416,7 @@ public entry fun check_and_level_up(pet: &mut Pet) {
 ## Step 12: Sleep System
 
 ### Sleep Functions:
+
 ```move
 public entry fun let_pet_sleep(pet: &mut Pet, clock: &Clock) {
     assert!(!is_sleeping(pet), E_PET_IS_ALREADY_ASLEEP);
@@ -423,7 +431,7 @@ public entry fun let_pet_sleep(pet: &mut Pet, clock: &Clock) {
 
 public entry fun wake_up_pet(pet: &mut Pet, clock: &Clock) {
     assert!(is_sleeping(pet), E_PET_IS_ASLEEP);
-    
+
     let key = string::utf8(SLEEP_STARTED_AT_KEY);
     let sleep_started_at: u64 = dynamic_field::remove<String, u64>(&mut pet.id, key);
     let duration_ms = clock.timestamp_ms() - sleep_started_at;
@@ -433,7 +441,7 @@ public entry fun wake_up_pet(pet: &mut Pet, clock: &Clock) {
     // Calculate energy gained
     let energy_gained_u64 = duration_ms / gb.sleep_energy_gain_ms;
     let energy_gained = if (energy_gained_u64 > (gb.max_stat as u64)) {
-        gb.max_stat 
+        gb.max_stat
     } else {
         (energy_gained_u64 as u8)
     };
@@ -466,6 +474,7 @@ public entry fun wake_up_pet(pet: &mut Pet, clock: &Clock) {
 ## Step 13: Accessory System
 
 ### Mint dan Equip Accessories:
+
 ```move
 public entry fun mint_accessory(ctx: &mut TxContext) {
     let accessory = PetAccessory {
@@ -508,6 +517,7 @@ public entry fun unequip_accessory(pet: &mut Pet, ctx: &mut TxContext) {
 ## Step 14: Helper Functions
 
 ### Emit Action dan Update Image:
+
 ```move
 // === Helper Functions ===
 fun emit_action(pet: &Pet, action: vector<u8>) {
@@ -523,7 +533,7 @@ fun emit_action(pet: &Pet, action: vector<u8>) {
 fun update_pet_image(pet: &mut Pet) {
     let key = string::utf8(EQUIPPED_ITEM_KEY);
     let has_accessory = dynamic_field::exists_<String>(&pet.id, key);
-    
+
     if (pet.game_data.level == 1) {
         if (has_accessory) {
             pet.image_url = string::utf8(PET_LEVEL_1_IMAGE_WITH_GLASSES_URL);
@@ -587,6 +597,7 @@ public fun init_for_testing(ctx: &mut TxContext) {
 ```
 
 # ✅ Full Code Implementation
+
 ```move
 module 0x0::tamagosui;
 
@@ -620,25 +631,25 @@ const SLEEP_STARTED_AT_KEY: vector<u8> = b"sleep_started_at";
 // === Game Balance ===
 public struct GameBalance has copy, drop {
     max_stat: u8,
-    
+
     // Feed settings
     feed_coins_cost: u64,
     feed_experience_gain: u64,
     feed_hunger_gain: u8,
-    
+
     // Play settings
     play_energy_loss: u8,
     play_hunger_loss: u8,
     play_experience_gain: u64,
     play_happiness_gain: u8,
-    
+
     // Work settings
     work_energy_loss: u8,
     work_happiness_loss: u8,
     work_hunger_loss: u8,
     work_coins_gain: u64,
     work_experience_gain: u64,
-    
+
     // Sleep settings (in milliseconds)
     sleep_energy_gain_ms: u64,
     sleep_happiness_loss_ms: u64,
@@ -651,18 +662,18 @@ public struct GameBalance has copy, drop {
 fun get_game_balance(): GameBalance {
     GameBalance {
         max_stat: 100,
-        
+
         // Feed
         feed_coins_cost: 5,
         feed_experience_gain: 5,
         feed_hunger_gain: 20,
-        
+
         // Play
         play_energy_loss: 15,
         play_hunger_loss: 15,
         play_experience_gain: 10,
         play_happiness_gain: 25,
-        
+
         // Work
         work_energy_loss: 20,
         work_hunger_loss: 20,
@@ -674,7 +685,7 @@ fun get_game_balance(): GameBalance {
         sleep_energy_gain_ms: 1000,    // 1 energy per second
         sleep_happiness_loss_ms: 700, // 1 happiness loss per 0.7 seconds
         sleep_hunger_loss_ms: 500,    // 1 hunger loss per 0.5 seconds
-        
+
         // Level
         exp_per_level: 100,
     }
@@ -812,8 +823,8 @@ public entry fun feed_pet(pet: &mut Pet) {
     pet.game_data.coins = pet.game_data.coins - gb.feed_coins_cost;
     pet.game_data.experience = pet.game_data.experience + gb.feed_experience_gain;
     pet.stats.hunger = if (pet.stats.hunger + gb.feed_hunger_gain > gb.max_stat)
-        gb.max_stat 
-    else 
+        gb.max_stat
+    else
         pet.stats.hunger + gb.feed_hunger_gain;
 
     emit_action(pet, b"fed");
@@ -829,9 +840,9 @@ public entry fun play_with_pet(pet: &mut Pet) {
     pet.stats.energy = pet.stats.energy - gb.play_energy_loss;
     pet.stats.hunger = pet.stats.hunger - gb.play_hunger_loss;
     pet.game_data.experience = pet.game_data.experience + gb.play_experience_gain;
-    pet.stats.happiness = if (pet.stats.happiness + gb.play_happiness_gain > gb.max_stat) 
-        gb.max_stat 
-    else 
+    pet.stats.happiness = if (pet.stats.happiness + gb.play_happiness_gain > gb.max_stat)
+        gb.max_stat
+    else
         pet.stats.happiness + gb.play_happiness_gain;
 
     emit_action(pet, b"played");
@@ -845,18 +856,18 @@ public entry fun work_for_coins(pet: &mut Pet) {
     assert!(pet.stats.energy >= gb.work_energy_loss, E_PET_TOO_TIRED);
     assert!(pet.stats.happiness >= gb.work_happiness_loss, E_PET_NOT_HUNGRY);
     assert!(pet.stats.hunger >= gb.work_hunger_loss, E_PET_TOO_HUNGRY);
-    
+
     pet.stats.energy = if (pet.stats.energy >= gb.work_energy_loss)
         pet.stats.energy - gb.work_energy_loss
-    else 
+    else
         0;
     pet.stats.happiness = if (pet.stats.happiness >= gb.work_happiness_loss)
         pet.stats.happiness - gb.work_happiness_loss
-    else 
+    else
         0;
     pet.stats.hunger = if (pet.stats.hunger >= gb.work_hunger_loss)
         pet.stats.hunger - gb.work_hunger_loss
-    else 
+    else
         0;
     pet.game_data.coins = pet.game_data.coins + gb.work_coins_gain;
     pet.game_data.experience = pet.game_data.experience + gb.work_experience_gain;
@@ -877,7 +888,7 @@ public entry fun let_pet_sleep(pet: &mut Pet, clock: &Clock) {
 
 public entry fun wake_up_pet(pet: &mut Pet, clock: &Clock) {
     assert!(is_sleeping(pet), E_PET_IS_ASLEEP);
-    
+
     let key = string::utf8(SLEEP_STARTED_AT_KEY);
     let sleep_started_at: u64 = dynamic_field::remove<String, u64>(&mut pet.id, key);
     let duration_ms = clock.timestamp_ms() - sleep_started_at;
@@ -888,7 +899,7 @@ public entry fun wake_up_pet(pet: &mut Pet, clock: &Clock) {
     let energy_gained_u64 = duration_ms / gb.sleep_energy_gain_ms;
     // Cap energy gain to max_stat
     let energy_gained = if (energy_gained_u64 > (gb.max_stat as u64)) {
-        gb.max_stat 
+        gb.max_stat
     } else {
         (energy_gained_u64 as u8)
     };
@@ -930,7 +941,7 @@ public entry fun check_and_level_up(pet: &mut Pet) {
     // Level up
     pet.game_data.level = pet.game_data.level + 1;
     pet.game_data.experience = pet.game_data.experience - required_exp;
-    
+
     // Update image based on level and equipped accessory
     update_pet_image(pet);
 
@@ -988,7 +999,7 @@ fun emit_action(pet: &Pet, action: vector<u8>) {
 fun update_pet_image(pet: &mut Pet) {
     let key = string::utf8(EQUIPPED_ITEM_KEY);
     let has_accessory = dynamic_field::exists_<String>(&pet.id, key);
-    
+
     if (pet.game_data.level == 1) {
         if (has_accessory) {
             pet.image_url = string::utf8(PET_LEVEL_1_IMAGE_WITH_GLASSES_URL);
@@ -1042,19 +1053,22 @@ public fun init_for_testing(ctx: &mut TxContext) {
 ## Step 17: Deploy dan Testing
 
 ### Compile Contract:
+
 ```bash
 sui move build
 ```
 
 ### Deploy ke Testnet:
+
 ```bash
 sui client publish
 ```
 
 ### Test Functions:
+
 ```bash
 # Adopt pet
-sui client call --function adopt_pet --module tamagosui --package [PACKAGE_ID] --args "My Pet" [CLOCK_ID] 
+sui client call --function adopt_pet --module tamagosui --package [PACKAGE_ID] --args "My Pet" [CLOCK_ID]
 
 # Feed pet
 sui client call --function feed_pet --module tamagosui --package [PACKAGE_ID] --args [PET_ID]
@@ -1063,9 +1077,11 @@ sui client call --function feed_pet --module tamagosui --package [PACKAGE_ID] --
 # 🧠 Konsep Move Lanjutan dalam Tamagosui
 
 ### 1. Model Penyimpanan Object-Centric
+
 Berbeda dengan blockchain tradisional yang menggunakan global storage, Sui menggunakan object-centric storage. Kontrak Tamagosui mendemonstrasikan konsep ini:
 
 **Blockchain Tradisional (Account-Based):**
+
 ```solidity
 // Ethereum Style - global mapping
 mapping(address => Pet) public pets;
@@ -1073,6 +1089,7 @@ mapping(uint256 => Item) public items;
 ```
 
 **Sui Object-Centric:**
+
 ```move
 // Segala sesuatu adalah objek dengan ID unik (wajib memiliki ability key dengan field id: UID )
 public struct Pet has key, store {
@@ -1092,15 +1109,18 @@ public struct PetAccessory has key, store {
 ```
 
 **Keuntungan Utama:**
+
 - **Tidak Ada Konflik Global State:** Setiap pet dapat diproses secara independen
 - **Ownership yang Jelas:** Setiap pet milik owner tertentu
 - **Type Safety:** Pet dan aksesori memiliki tipe yang kuat
 - **Akses Efisien:** Akses langsung ke pet tanpa pencarian global state
 
 > **References:**
+>
 > - [Sui Objects - Object Model](https://docs.sui.io/concepts/object-model)
 
 ### 2. Shared Objects vs Owned Objects
+
 Memahami ownership objek sangat penting untuk aplikasi gaming:
 
 ```move
@@ -1109,17 +1129,19 @@ transfer::public_transfer(pet, ctx.sender());
 
 // Di Tamagosui, pet adalah owned object - hanya owner yang bisa:
 // - Memberi makan pet
-// - Bermain dengan pet  
+// - Bermain dengan pet
 // - Menyuruh pet bekerja
 // - Memasang/melepas aksesori
 ```
 
 **Kapan Menggunakan Masing-masing type object:**
+
 - **Owned:** Pet individual, aksesori, profil user (seperti di Tamagosui)
-- **Shared:** Leaderboard game, marketplace, sistem multi-user  
+- **Shared:** Leaderboard game, marketplace, sistem multi-user
 - **Immutable:** Konfigurasi game, gambar evolusi pet
 
 > **References:**
+>
 > - [Sui Objects - Object Ownership ](https://docs.sui.io/concepts/object-ownership)
 > - [Sui Objects - Object Ownership 2](https://docs.sui.io/guides/developer/sui-101/object-ownership)
 > - [Move Book - Ownership](https://move-book.com/object/ownership/)
@@ -1127,6 +1149,7 @@ transfer::public_transfer(pet, ctx.sender());
 > - [Sui Objects - Transfer](https://docs.sui.io/concepts/transfers)
 
 ### 3. Dynamic Fields: Kustomisasi Pet Tanpa Batas
+
 Dynamic fields memungkinkan penyimpanan data tanpa batas tanpa mengetahui nama field saat compile time. Tamagosui menggunakan ini untuk:
 
 ```move
@@ -1156,16 +1179,18 @@ fun has_accessory_equipped(pet: &Pet): bool {
 ```
 
 **Kasus Penggunaan Tamagosui:**
+
 - **Accessories:** Simpan kacamata, topi, atau item lain di dalam pet
 - **Status Tidur:** Lacak kapan pet mulai tidur untuk recovery energy
 - **Ekstensibilitas Masa Depan:** Tambah fitur pet baru tanpa mengubah struct inti
 
 > **References:**
+>
 > - [Sui Dynamic Fields Concept](https://docs.sui.io/concepts/dynamic-fields)
 > - [Move Book - Dynamic Object Fields](https://move-book.com/programmability/dynamic-object-fields/)
 
-
 ### 4. Clock Object: Mekanik Pet Berbasis Waktu
+
 Sui memiliki Clock object, semacam "jam global" on-chain yang bisa digunakan semua orang untuk handle hal-hal yang butuh timing:
 
 ```move
@@ -1178,7 +1203,7 @@ public entry fun adopt_pet(
     ctx: &mut TxContext
 ) {
     let current_time = clock.timestamp_ms();
-    
+
     let pet = Pet {
         id: object::new(ctx),
         name,
@@ -1187,7 +1212,7 @@ public entry fun adopt_pet(
         stats: PetStats { energy: 60, happiness: 50, hunger: 40 },
         game_data: PetGameData { coins: 20, experience: 0, level: 1 }
     };
-    
+
     transfer::public_transfer(pet, ctx.sender());
 }
 
@@ -1196,38 +1221,42 @@ public entry fun wake_up_pet(pet: &mut Pet, clock: &Clock) {
     let key = string::utf8(SLEEP_STARTED_AT_KEY);
     let sleep_started_at: u64 = dynamic_field::remove<String, u64>(&mut pet.id, key);
     let duration_ms = clock.timestamp_ms() - sleep_started_at;
-    
+
     let gb = get_game_balance();
-    
+
     // Hitung energy yang didapat berdasarkan durasi tidur
     let energy_gained = duration_ms / gb.sleep_energy_gain_ms; // 1 energy per detik
-    pet.stats.energy = if (pet.stats.energy + energy_gained > gb.max_stat) 
-        gb.max_stat 
-    else 
+    pet.stats.energy = if (pet.stats.energy + energy_gained > gb.max_stat)
+        gb.max_stat
+    else
         pet.stats.energy + energy_gained;
-    
+
     // Juga hitung kehilangan happiness dan hunger selama tidur
     // Ini menciptakan mekanik perawatan pet yang realistis
 }
 ```
 
 **Properti Clock Object:**
+
 - **Singleton object** dengan ID 0x6
-- **Akses read-only** ke timestamp saat ini  
+- **Akses read-only** ke timestamp saat ini
 - **Waktu berbasis konsensus** (bukan waktu mesin lokal)
 - **Presisi milidetik** untuk mekanik game yang akurat
 
 **Pola Berbasis Waktu Tamagosui:**
+
 - **Adopsi Pet:** Catat waktu adopsi yang tepat
 - **Mekanik Tidur:** Recovery energy seiring waktu
 - **Decay Stat:** Pet menjadi lapar/lelah seiring waktu (fitur masa depan)
 - **Evolusi:** Pertumbuhan pet berbasis waktu (fitur masa depan)
 
 > **References:**
+>
 > - [Clock Module Reference](https://docs.sui.io/references/framework/sui_sui/clock)
 > - [Move Book - Time in Sui](https://move-book.com/programmability/epoch-and-time/#time)
 
 ### 5. Module Initializers: Setup Game Satu Kali
+
 Fungsi init berjalan tepat sekali ketika module Tamagosui dipublish:
 
 ```move
@@ -1275,19 +1304,21 @@ fun init(witness: TAMAGOSUI, ctx: &mut TxContext) {
 ```
 
 > **References:**
+>
 > - [Move Book - Module Initializer](https://move-book.com/programmability/module-initializer/)
 > - [Sui Module Initializer](https://docs.sui.io/concepts/sui-move-concepts#module-initializers)
 > - [Move Book - One-Time Witness](https://move-book.com/programmability/one-time-witness/)
 > - [Module Publishing](https://move-book.com/your-first-move/hello-sui/#publish)
 
 ### 6. Entry Functions vs Public Functions dalam Gaming
+
 Memahami visibility fungsi untuk mekanik game:
 
 ```move
 // Entry function - pemain panggil langsung dari wallet/CLI
 public entry fun feed_pet(pet: &mut Pet) {
     assert!(!is_sleeping(pet), E_PET_IS_ASLEEP);
-    
+
     let gb = get_game_balance();
     assert!(pet.stats.hunger < gb.max_stat, E_PET_NOT_HUNGRY);
     assert!(pet.game_data.coins >= gb.feed_coins_cost, E_NOT_ENOUGH_COINS);
@@ -1296,7 +1327,7 @@ public entry fun feed_pet(pet: &mut Pet) {
     pet.game_data.coins = pet.game_data.coins - gb.feed_coins_cost;
     pet.stats.hunger = if (pet.stats.hunger + gb.feed_hunger_gain > gb.max_stat)
         gb.max_stat else pet.stats.hunger + gb.feed_hunger_gain;
-        
+
     emit_action(pet, b"fed");
 }
 
@@ -1314,7 +1345,7 @@ public fun is_sleeping(pet: &Pet): bool {
 fun update_pet_image(pet: &mut Pet) {
     let key = string::utf8(EQUIPPED_ITEM_KEY);
     let has_accessory = dynamic_field::exists_<String>(&pet.id, key);
-    
+
     // Update gambar berdasarkan level dan aksesori terpasang
     if (pet.game_data.level == 1) {
         if (has_accessory) {
@@ -1326,13 +1357,16 @@ fun update_pet_image(pet: &mut Pet) {
     // ... logic level lainnya
 }
 ```
+
 > **References:**
+>
 > - [Move Book - Function Visibility](https://move-book.com/move-basics/visibility/)
 > - [Sui Move - Entry Functions](https://docs.sui.io/concepts/sui-move-concepts#entry-functions)
 
 ### 7. Teknik Optimasi Gas untuk Gaming
 
 **1. Struktur Data Efisien:**
+
 ```move
 // Good: Organisir stat dalam nested struct
 public struct Pet has key, store {
@@ -1354,6 +1388,7 @@ public struct PetStats has store {
 ```
 
 **2. Konfigurasi Game Terpusat:**
+
 ```move
 public struct GameBalance has copy, drop {
     max_stat: u8,
@@ -1374,6 +1409,7 @@ fun get_game_balance(): GameBalance {
 ```
 
 **3. Operasi Batch (Next Update):**
+
 ```move
 // Daripada aksi pet individual
 public entry fun batch_feed_pets(pets: vector<&mut Pet>) {
@@ -1388,6 +1424,7 @@ public entry fun batch_feed_pets(pets: vector<&mut Pet>) {
 ```
 
 > **References:**
+>
 > - [Sui Gas Pricing](https://docs.sui.io/concepts/sui-move-concepts#entry-functions)
 
 ## ✅ Latihan: Memahami Smart Contract Tamagosui (90 menit)
@@ -1423,6 +1460,7 @@ public struct GameBalance has copy, drop {
 ```
 
 **Pertanyaan untuk Eksplorasi:**
+
 1. Mengapa kode error didefinisikan sebagai konstanta?
 2. Ability apa yang dimiliki struct `Pet` dan mengapa?
 3. Bagaimana struct `GameBalance` membantu maintainability?
@@ -1435,7 +1473,7 @@ Telusuri siklus hidup pet yang lengkap:
 // 1. Adopsi Pet
 public entry fun adopt_pet(name: String, clock: &Clock, ctx: &mut TxContext)
 
-// 2. Aksi Perawatan Dasar  
+// 2. Aksi Perawatan Dasar
 public entry fun feed_pet(pet: &mut Pet)
 public entry fun play_with_pet(pet: &mut Pet)
 public entry fun work_for_coins(pet: &mut Pet)
@@ -1452,6 +1490,7 @@ public entry fun equip_accessory(pet: &mut Pet, accessory: PetAccessory)
 ```
 
 **Tugas Hands-on:**
+
 1. Deploy kontrak Tamagosui ke testnet
 2. Adopsi pet pertama kamu
 3. Berinteraksi dengan pet kamu (feed, play, work)
@@ -1480,6 +1519,7 @@ public fun is_sleeping(pet: &Pet): bool {
 ```
 
 **Eksperimen dengan:**
+
 1. Cek apakah pet sedang tidur menggunakan `is_sleeping()`
 2. Pahami bagaimana durasi tidur mempengaruhi recovery stat
 3. Eksplorasi sistem aksesori menggunakan dynamic fields
@@ -1493,24 +1533,25 @@ public entry fun wake_up_pet(pet: &mut Pet, clock: &Clock) {
     let key = string::utf8(SLEEP_STARTED_AT_KEY);
     let sleep_started_at: u64 = dynamic_field::remove<String, u64>(&mut pet.id, key);
     let duration_ms = clock.timestamp_ms() - sleep_started_at;
-    
+
     let gb = get_game_balance();
-    
+
     // Recovery energy: 1 poin per detik
     let energy_gained = duration_ms / gb.sleep_energy_gain_ms;
-    
-    // Decay happiness: 1 poin per 0.7 detik  
+
+    // Decay happiness: 1 poin per 0.7 detik
     let happiness_lost = duration_ms / gb.sleep_happiness_loss_ms;
-    
+
     // Decay hunger: 1 poin per 0.5 detik
     let hunger_lost = duration_ms / gb.sleep_hunger_loss_ms;
-    
+
     // Aplikasikan perubahan yang dihitung dengan bounds checking
     // ...
 }
 ```
 
 **Skenario Test:**
+
 1. Tidurkan pet untuk durasi berbeda
 2. Observasi bagaimana stat berubah berdasarkan waktu tidur
 3. Hitung durasi tidur optimal untuk situasi berbeda
@@ -1518,6 +1559,7 @@ public entry fun wake_up_pet(pet: &mut Pet, clock: &Clock) {
 ## 🎮 Pola Gaming Lanjutan dalam Tamagosui
 
 ### 1. Pola State Machine
+
 ```move
 // Pet bisa dalam state berbeda yang mempengaruhi aksi yang tersedia
 pub fun is_sleeping(pet: &Pet): bool // State tidur
@@ -1526,13 +1568,14 @@ assert!(!is_sleeping(pet), E_PET_IS_ASLEEP); // Di feed_pet(), play_with_pet(), 
 ```
 
 ### 2. Progressive Disclosure
+
 ```move
 // Kemampuan pet terbuka berdasarkan level
 fun update_pet_image(pet: &mut Pet) {
     if (pet.game_data.level == 1) {
         // Opsi tampilan Level 1
     } else if (pet.game_data.level == 2) {
-        // Opsi tampilan Level 2  
+        // Opsi tampilan Level 2
     } else if (pet.game_data.level >= 3) {
         // Opsi tampilan Level 3+
     }
@@ -1540,6 +1583,7 @@ fun update_pet_image(pet: &mut Pet) {
 ```
 
 ### 3. Resource Management
+
 ```move
 // Multiple resource yang saling terkait
 public struct PetStats has store {
@@ -1551,13 +1595,14 @@ public struct PetStats has store {
 // Aksi memiliki multiple cost/benefit resource
 pub entry fun play_with_pet(pet: &mut Pet) {
     pet.stats.energy = pet.stats.energy - gb.play_energy_loss;      // Butuh energy
-    pet.stats.hunger = pet.stats.hunger - gb.play_hunger_loss;      // Butuh hunger  
+    pet.stats.hunger = pet.stats.hunger - gb.play_hunger_loss;      // Butuh hunger
     pet.stats.happiness = pet.stats.happiness + gb.play_happiness_gain; // Dapat happiness
     pet.game_data.experience = pet.game_data.experience + gb.play_experience_gain; // Dapat XP
 }
 ```
 
 ### 4. Event-Driven Architecture
+
 ```move
 // Event memungkinkan pengalaman off-chain yang kaya
 public struct PetAction has copy, drop {
@@ -1583,26 +1628,31 @@ fun emit_action(pet: &Pet, action: vector<u8>) {
 ## 📚 Poin Penting untuk Pengembangan Gaming Move
 
 ### 1. **Object Ownership Memungkinkan True Ownership**
+
 - Pemain benar-benar memiliki pet mereka sebagai objek Sui
 - Tidak ada otoritas pusat yang bisa mengambil atau memodifikasi pet
 - Pet bisa ditransfer, dijual, atau digunakan di game lain
 
-### 2. **Dynamic Fields Memungkinkan Ekstensibilitas**  
+### 2. **Dynamic Fields Memungkinkan Ekstensibilitas**
+
 - Tambah fitur baru tanpa mengubah struct inti
 - Simpan aksesori, achievement, atau data custom
 - Desain game yang future-proof
 
 ### 3. **Mekanik Berbasis Waktu Terasa Natural**
+
 - Waktu blockchain memungkinkan gameplay yang adil dan berbasis konsensus
 - Siklus tidur/bangun menciptakan pola interaksi harian yang engaging
 - Kalkulasi berbasis durasi reward pemikiran strategis
 
 ### 4. **Event Memungkinkan Pengalaman Kaya**
+
 - Service off-chain bisa membangun UI kaya menggunakan data event
 - Analytics dan leaderboard menjadi mungkin
 - Fitur sosial bisa dibangun di sekitar aktivitas pet
 
 ### 5. **Resource Management Menciptakan Depth**
+
 - Multiple stat yang saling terkait menciptakan pilihan meaningful
 - Pemain harus menyeimbangkan prioritas yang berkompetisi (energy vs happiness vs hunger)
 - Sistem ekonomi muncul secara natural (koin untuk feeding)
@@ -1610,32 +1660,26 @@ fun emit_action(pet: &Pet, action: vector<u8>) {
 ## 🚀 Langkah Selanjutnya: Memperluas Tamagosui
 
 ### Ekstensi Pemula
+
 1. **Aksi Pet Baru:** Tambah aksi "exercise", "study", atau "rest"
 2. **Lebih Banyak Aksesori:** Buat topi, pakaian, atau mainan
 3. **Kepribadian Pet:** Tambah trait yang mempengaruhi outcome aksi
 
-### Ekstensi Menengah  
+### Ekstensi Menengah
+
 1. **Evolusi Pet:** Transform pet pada level tertentu
 2. **Sistem Breeding:** Gabungkan dua pet untuk membuat keturunan
 3. **Marketplace:** Biarkan pemain trade pet dan aksesori
 
 ### Ekstensi Lanjutan
-1. **Gameplay Multi-Pet:** Battle pet, race, atau kompetisi  
+
+1. **Gameplay Multi-Pet:** Battle pet, race, atau kompetisi
 2. **Sistem Guild:** Pemain membentuk grup dengan tujuan bersama
 3. **Integrasi Cross-Game:** Gunakan pet di multiple game
 
 ## 🧪 Uji Pemahaman
 
 ### Pertanyaan Quiz
+
 1. Apa yang terjadi jika kamu menghapus ability `store` dari `PetStats`?
 2. Mengapa Clock object adalah shared object bukan owned object?
-3. Bagaimana kamu akan menambah sistem "mood" yang berubah berdasarkan aksi terbaru?
-4. Optimasi gas apa yang bisa kamu aplikasikan pada kontrak saat ini?
-
-### Tantangan Praktis
-1. **Tantangan Desain:** Bagaimana kamu akan implementasi breeding pet?
-2. **Tantangan Gas:** Optimasi fungsi `wake_up_pet` untuk penggunaan gas yang lebih baik
-3. **Tantangan UX:** Desain sistem happiness pet yang mendorong interaksi harian
-4. **Tantangan Security:** Identifikasi potential attack vector di kontrak saat ini
-
----
