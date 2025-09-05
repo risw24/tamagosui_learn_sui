@@ -13,7 +13,7 @@ import { queryKeyOwnedAccessories } from "./useQueryOwnedAccessories";
 
 const mutateKeyMintAccessory = ["mutate", "mint-accessory"];
 
-export default function useMutateMintAccessory() {
+export function useMutateMintAccessory() {
   const currentAccount = useCurrentAccount();
   const { mutateAsync: signAndExecute } = useSignAndExecuteTransaction();
   const suiClient = useSuiClient();

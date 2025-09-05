@@ -32,15 +32,15 @@ import { StatDisplay } from "./components/StatDisplay";
 import { ActionButton } from "./components/ActionButton";
 import { WardrobeManager } from "./components/Wardrobe";
 
-import useMutateFeedPet from "@/hooks/useMutateFeedPet";
-import useMutateLetPetSleep from "@/hooks/useMutateLetPetSleep";
-import useMutatePlayWithPet from "@/hooks/useMutatePlayWithPet";
-import useMutateWorkForCoins from "@/hooks/useMutateWorkForCoins";
-import useMutateCheckAndLevelUp from "@/hooks/useMutateCheckLevel";
+import { useMutateCheckAndLevelUp } from "@/hooks/useMutateCheckLevel";
+import { useMutateFeedPet } from "@/hooks/useMutateFeedPet";
+import { useMutateLetPetSleep } from "@/hooks/useMutateLetPetSleep";
+import { useMutatePlayWithPet } from "@/hooks/useMutatePlayWithPet";
+import { useMutateWakeUpPet } from "@/hooks/useMutateWakeUpPet";
+import { useMutateWorkForCoins } from "@/hooks/useMutateWorkForCoins";
+import { useQueryGameBalance } from "@/hooks/useQueryGameBalance";
 
 import type { PetStruct } from "@/types/Pet";
-import { useQueryGameBalance } from "@/hooks/useQueryGameBalance";
-import useMutateWakeUpPet from "@/hooks/useMutateWakeUpPet";
 
 type PetDashboardProps = {
   pet: PetStruct;
@@ -118,9 +118,14 @@ export default function PetComponent({ pet }: PetDashboardProps) {
     pet.stats.hunger < gameBalance.max_stat &&
     pet.game_data.coins >= Number(gameBalance.feed_coins_cost);
   const canPlay =
-    !pet.isSleeping && pet.stats.energy >= gameBalance.play_energy_loss;
+    !pet.isSleeping &&
+    pet.stats.energy >= gameBalance.play_energy_loss &&
+    pet.stats.hunger >= gameBalance.play_hunger_loss;
   const canWork =
-    !pet.isSleeping && pet.stats.energy >= gameBalance.work_energy_loss;
+    !pet.isSleeping &&
+    pet.stats.energy >= gameBalance.work_energy_loss &&
+    pet.stats.happiness >= gameBalance.work_happiness_loss &&
+    pet.stats.hunger >= gameBalance.work_hunger_loss;
   const canLevelUp =
     !pet.isSleeping &&
     pet.game_data.experience >=
@@ -128,10 +133,12 @@ export default function PetComponent({ pet }: PetDashboardProps) {
 
   return (
     <TooltipProvider>
-      <Card className="max-w-sm w-full mx-auto shadow-lg">
+      <Card className="w-full max-w-sm shadow-hard border-2 border-primary">
         <CardHeader className="text-center">
-          <CardTitle className="text-3xl font-bold">{pet.name}</CardTitle>
-          <CardDescription>Level {pet.game_data.level}</CardDescription>
+          <CardTitle className="text-4xl">{pet.name}</CardTitle>
+          <CardDescription className="text-lg">
+            Level {pet.game_data.level}
+          </CardDescription>
         </CardHeader>
 
         <CardContent className="space-y-4">
@@ -217,13 +224,15 @@ export default function PetComponent({ pet }: PetDashboardProps) {
               label="Play"
               icon={<PlayIcon />}
             />
-            <ActionButton
-              onClick={() => mutateWorkForCoins({ petId: pet.id })}
-              disabled={!canWork || isAnyActionPending}
-              isPending={isWorking}
-              label="Work"
-              icon={<BriefcaseIcon />}
-            />
+            <div className="col-span-2">
+              <ActionButton
+                onClick={() => mutateWorkForCoins({ petId: pet.id })}
+                disabled={!canWork || isAnyActionPending}
+                isPending={isWorking}
+                label="Work"
+                icon={<BriefcaseIcon />}
+              />
+            </div>
           </div>
           <div className="col-span-2 pt-2">
             {pet.isSleeping ? (
@@ -255,7 +264,10 @@ export default function PetComponent({ pet }: PetDashboardProps) {
             )}
           </div>
         </CardContent>
-        <WardrobeManager pet={pet} isAnyActionPending={isAnyActionPending} />
+        <WardrobeManager
+          pet={pet}
+          isAnyActionPending={isAnyActionPending || pet.isSleeping}
+        />
       </Card>
     </TooltipProvider>
   );

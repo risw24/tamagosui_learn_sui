@@ -1,45 +1,31 @@
 import { useQueryOwnedPet } from "@/hooks/useQueryOwnedPet";
-import { ConnectButton, useCurrentAccount } from "@mysten/dapp-kit";
+import { useCurrentAccount, ConnectButton } from "@mysten/dapp-kit";
 import AdoptComponent from "./AdoptComponent";
 import PetComponent from "./PetComponent";
+import Header from "@/components/Header";
 
 export default function HomePage() {
   const currentAccount = useCurrentAccount();
-
   const { data: ownedPet, isPending: isOwnedPetLoading } = useQueryOwnedPet();
 
-  if (!currentAccount)
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center">
-        <div className="text-center">
-          <ConnectButton />
-        </div>
-      </div>
-    );
-
-  if (isOwnedPetLoading)
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl">Loading your pet...</h1>
-        </div>
-      </div>
-    );
-
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center">
-      <div>
-        <ConnectButton />
-      </div>
-      <div className="text-center">
-        <h1 className="text-2xl">SUI TAMAGOCHI</h1>
-        <p className="text-xs text-muted-foreground tracking-widest">
-          BLOCKCHAIN PET SIMULATOR
-        </p>
-      </div>
-      <div className="w-full flex items-center justify-center">
-        {ownedPet ? <PetComponent pet={ownedPet} /> : <AdoptComponent />}
-      </div>
+    <div className="min-h-screen flex flex-col bg-secondary">
+      <Header />
+      <main className="flex-grow flex items-center justify-center p-4 pt-24">
+        {!currentAccount ? (
+          <div className="text-center p-8 border-4 border-primary bg-background shadow-[8px_8px_0px_#000]">
+            <h2 className="text-4xl uppercase">Please Connect Wallet</h2>
+          </div>
+        ) : isOwnedPetLoading ? (
+          <div className="text-center p-8 border-4 border-primary bg-background shadow-[8px_8px_0px_#000]">
+            <h2 className="text-4xl uppercase">Loading Pet...</h2>
+          </div>
+        ) : ownedPet ? (
+          <PetComponent pet={ownedPet} />
+        ) : (
+          <AdoptComponent />
+        )}
+      </main>
     </div>
   );
 }

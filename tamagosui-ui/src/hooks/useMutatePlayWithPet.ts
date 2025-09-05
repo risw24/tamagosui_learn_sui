@@ -16,7 +16,7 @@ type UseMutatePlayWithPetParams = {
   petId: string;
 };
 
-export default function useMutatePlayWithPet() {
+export function useMutatePlayWithPet() {
   const currentAccount = useCurrentAccount();
   const { mutateAsync: signAndExecute } = useSignAndExecuteTransaction();
   const suiClient = useSuiClient();

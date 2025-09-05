@@ -18,7 +18,7 @@ type UseMutateUnequipAccessory = {
   petId: string;
 };
 
-export default function UseMutateUnequipAccessory() {
+export function UseMutateUnequipAccessory() {
   const currentAccount = useCurrentAccount();
   const { mutateAsync: signAndExecute } = useSignAndExecuteTransaction();
   const suiClient = useSuiClient();

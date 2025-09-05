@@ -11,7 +11,6 @@ import { Input } from "@/components/ui/input";
 import { useMutateAdoptPet } from "@/hooks/useMutateAdoptPet";
 import { Loader2Icon } from "lucide-react";
 
-
 export default function AdoptComponent() {
   const [petName, setPetName] = useState("");
   const { mutate: mutateAdoptPet, isPending: isAdopting } = useMutateAdoptPet();
@@ -22,48 +21,44 @@ export default function AdoptComponent() {
   };
 
   return (
-    <Card className="max-w-xs w-full mx-auto text-center shadow-lg">
+    <Card className="w-full max-w-sm text-center shadow-hard border-2 border-primary">
       <CardHeader>
-        <CardTitle className="text-2xl">ADOPT YOUR NEW FRIEND</CardTitle>
-        <CardDescription>Begin your Sui adventure!</CardDescription>
+        <CardTitle className="text-3xl">ADOPT YOUR PET</CardTitle>
+        <CardDescription>A new friend awaits!</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-        {/* Tampilkan gambar pet yang akan diadopsi */}
         <div>
           <img
             src="/pet.jpeg"
             alt="Your new pet"
-            className="w-32 h-32 mx-auto rounded-full border-4 border-primary/20 object-cover"
+            className="w-40 h-40 mx-auto image-rendering-pixelated bg-secondary p-2 border-2 border-primary"
           />
         </div>
 
-        {/* Kolom input untuk nama */}
         <div className="space-y-2">
-          <p className="text-sm text-muted-foreground">
-            What will you name your new companion?
-          </p>
+          <p className="text-lg">What will you name it?</p>
           <Input
             value={petName}
             onChange={(e) => setPetName(e.target.value)}
-            placeholder="Enter your pet's name"
+            placeholder="Enter pet's name"
             disabled={isAdopting}
+            className="text-center text-lg border-2 border-primary focus:ring-2 focus:ring-offset-2 focus:ring-ring"
           />
         </div>
 
-        {/* Tombol Adopsi */}
         <div>
           <Button
             onClick={handleAdoptPet}
             disabled={!petName.trim() || isAdopting}
-            className="w-full"
+            className="w-full text-lg py-6 border-2 border-primary shadow-hard-sm hover:translate-x-0.5 hover:translate-y-0.5"
           >
             {isAdopting ? (
               <>
-                <Loader2Icon className="mr-2 h-4 w-4 animate-spin" />
+                <Loader2Icon className="mr-2 h-5 w-5 animate-spin" />{" "}
                 Adopting...
               </>
             ) : (
-              "Adopt Now!"
+              "ADOPT NOW"
             )}
           </Button>
         </div>

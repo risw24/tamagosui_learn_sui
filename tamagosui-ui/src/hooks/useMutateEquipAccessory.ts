@@ -19,7 +19,7 @@ type UseMutateEquipAccessory = {
   accessoryId: string;
 };
 
-export default function UseMutateEquipAccessory() {
+export function UseMutateEquipAccessory() {
   const currentAccount = useCurrentAccount();
   const { mutateAsync: signAndExecute } = useSignAndExecuteTransaction();
   const suiClient = useSuiClient();

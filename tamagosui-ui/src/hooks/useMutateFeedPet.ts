@@ -16,7 +16,7 @@ type UseMutateFeedPetParams = {
   petId: string;
 };
 
-export default function useMutateFeedPet() {
+export function useMutateFeedPet() {
   const currentAccount = useCurrentAccount();
   const { mutateAsync: signAndExecute } = useSignAndExecuteTransaction();
   const suiClient = useSuiClient();

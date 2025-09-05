@@ -3,9 +3,9 @@ import { GlassesIcon, Loader2Icon, WarehouseIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CardFooter } from "@/components/ui/card";
 
-import UseMutateEquipAccessory from "@/hooks/useMutateEquipAccessory";
-import useMutateMintAccessory from "@/hooks/useMutateMintAccessory";
-import UseMutateUnequipAccessory from "@/hooks/useMutateUnequipAccessory";
+import { UseMutateEquipAccessory } from "@/hooks/useMutateEquipAccessory";
+import { useMutateMintAccessory } from "@/hooks/useMutateMintAccessory";
+import { UseMutateUnequipAccessory } from "@/hooks/useMutateUnequipAccessory";
 import { useQueryEquippedAccessory } from "@/hooks/useQueryEquippedAccessory";
 import { useQueryOwnedAccessories } from "@/hooks/useQueryOwnedAccessories";
 

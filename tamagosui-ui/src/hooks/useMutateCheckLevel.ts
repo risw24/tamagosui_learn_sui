@@ -16,7 +16,7 @@ type UseMutateCheckAndLevelUp = {
   petId: string;
 };
 
-export default function useMutateCheckAndLevelUp() {
+export function useMutateCheckAndLevelUp() {
   const currentAccount = useCurrentAccount();
   const { mutateAsync: signAndExecute } = useSignAndExecuteTransaction();
   const suiClient = useSuiClient();
@@ -44,7 +44,7 @@ export default function useMutateCheckAndLevelUp() {
       return response;
     },
     onSuccess: (response) => {
-      toast.success(`Checked pet level successfully! Tx: ${response.digest}`);
+      toast.success(`Level up pet successfully! Tx: ${response.digest}`);
       queryClient.invalidateQueries({ queryKey: queryKeyOwnedPet() });
     },
     onError: (error) => {

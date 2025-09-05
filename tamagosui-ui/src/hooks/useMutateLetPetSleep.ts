@@ -16,7 +16,7 @@ type UseMutateLetPetSleepParams = {
   petId: string;
 };
 
-export default function useMutateLetPetSleep() {
+export function useMutateLetPetSleep() {
   const currentAccount = useCurrentAccount();
   const { mutateAsync: signAndExecute } = useSignAndExecuteTransaction();
   const suiClient = useSuiClient();

@@ -19,6 +19,8 @@ const PET_LEVEL_1_IMAGE_URL: vector<u8> = b"https://tan-kind-lizard-741.mypinata
 const PET_LEVEL_1_IMAGE_WITH_GLASSES_URL: vector<u8> = b"https://tan-kind-lizard-741.mypinata.cloud/ipfs/bafkreibizappmcjaq5a5metl27yc46co4kxewigq6zu22vovwvn5qfsbiu";
 const PET_LEVEL_2_IMAGE_URL: vector<u8> = b"https://tan-kind-lizard-741.mypinata.cloud/ipfs/bafkreia5tgsowzfu6mzjfcxagfpbkghfuho6y5ybetxh3wabwrc5ajmlpq";
 const PET_LEVEL_2_IMAGE_WITH_GLASSES_URL:vector<u8> = b"https://tan-kind-lizard-741.mypinata.cloud/ipfs/bafkreif5bkpnqyybq3aqgafqm72x4wfjwcuxk33vvykx44weqzuilop424";
+const PET_LEVEL_3_IMAGE_URL: vector<u8> = b"https://tan-kind-lizard-741.mypinata.cloud/ipfs/bafkreidnqerfwxuxkrdsztgflmg5jwuespdkrazl6qmk7ykfgmrfzvinoy";
+const PET_LEVEL_3_IMAGE_WITH_GLASSES_URL:vector<u8> = b"https://tan-kind-lizard-741.mypinata.cloud/ipfs/bafkreigs6r3rdupoji7pqmpwe76z7wysguzdlq43t3wqmzi2654ux5n6uu";
 const PET_SLEEP_IMAGE_URL: vector<u8> = b"https://tan-kind-lizard-741.mypinata.cloud/ipfs/bafkreihwofl5stihtzjixfhrtznd7zqkclfhmlshgsg7cbszzjqqpvf7ae";
 const ACCESSORY_GLASSES_IMAGE_URL: vector<u8> = b"https://tan-kind-lizard-741.mypinata.cloud/ipfs/bafkreigyivmq45od3jkryryi3w6t5j65hcnfh5kgwpi2ex7llf2i6se7de";
 
@@ -76,7 +78,7 @@ fun get_game_balance(): GameBalance {
         work_hunger_loss: 20,
         work_happiness_loss: 20,
         work_coins_gain: 10,
-        work_experience_gain: 20,
+        work_experience_gain: 15,
 
         // Sleep (rates per millisecond)
         sleep_energy_gain_ms: 1000,    // 1 energy per second
@@ -133,23 +135,40 @@ public struct PetAction has copy, drop {
 }
 
 fun init(witness: TAMAGOSUI, ctx: &mut TxContext) {
-    let keys = vector[
+    let publisher = package::claim(witness, ctx);
+
+    let pet_keys = vector[
         string::utf8(b"name"),
         string::utf8(b"image_url"),
-        string::utf8(b"birth_date")
+        string::utf8(b"birth_date"),
+        string::utf8(b"experience"),
+        string::utf8(b"level"),
     ];
 
-    let values = vector[
+    let pet_values = vector[
         string::utf8(b"{name}"),
         string::utf8(b"{image_url}"),
-        string::utf8(b"{birth_date}")
+        string::utf8(b"{adopted_at}"),
+        string::utf8(b"{game_data.experience}"),
+        string::utf8(b"{game_data.level}"),
     ];
 
-    let publisher = package::claim(witness, ctx);
-    let mut display = display::new_with_fields<Pet>(&publisher, keys, values, ctx);
-    display.update_version();
+    let mut pet_display = display::new_with_fields<Pet>(&publisher, pet_keys, pet_values, ctx);
+    pet_display.update_version();
+    transfer::public_transfer(pet_display, ctx.sender());
 
-    transfer::public_transfer(display, ctx.sender());
+    let accessory_keys = vector[
+        string::utf8(b"name"),
+        string::utf8(b"image_url")
+    ];
+    let accessory_values = vector[
+        string::utf8(b"{name}"),
+        string::utf8(b"{image_url}")
+    ];
+    let mut accessory_display = display::new_with_fields<PetAccessory>(&publisher, accessory_keys, accessory_values, ctx);
+    accessory_display.update_version();
+    transfer::public_transfer(accessory_display, ctx.sender());
+
     transfer::public_transfer(publisher, ctx.sender());
 }
 
@@ -161,13 +180,13 @@ public entry fun adopt_pet(
     let current_time = clock.timestamp_ms();
 
     let pet_stats = PetStats {
-        energy: 80,
-        happiness: 80,
-        hunger: 80,
+        energy: 60,
+        happiness: 50,
+        hunger: 40,
     };
 
     let pet_game_data = PetGameData {
-        coins: 50,
+        coins: 20,
         experience: 0,
         level: 1
     };
@@ -234,6 +253,8 @@ public entry fun work_for_coins(pet: &mut Pet) {
     let gb = get_game_balance();
 
     assert!(pet.stats.energy >= gb.work_energy_loss, E_PET_TOO_TIRED);
+    assert!(pet.stats.happiness >= gb.work_happiness_loss, E_PET_NOT_HUNGRY);
+    assert!(pet.stats.hunger >= gb.work_hunger_loss, E_PET_TOO_HUNGRY);
     
     pet.stats.energy = if (pet.stats.energy >= gb.work_energy_loss)
         pet.stats.energy - gb.work_energy_loss
@@ -332,7 +353,7 @@ public entry fun mint_accessory(ctx: &mut TxContext) {
         name: string::utf8(b"cool glasses"),
         image_url: string::utf8(ACCESSORY_GLASSES_IMAGE_URL)
     };
-    transfer::transfer(accessory, ctx.sender());
+    transfer::public_transfer(accessory, ctx.sender());
 }
 
 public entry fun equip_accessory(pet: &mut Pet, accessory: PetAccessory) {
@@ -384,11 +405,17 @@ fun update_pet_image(pet: &mut Pet) {
         } else {
             pet.image_url = string::utf8(PET_LEVEL_1_IMAGE_URL);
         }
-    } else if (pet.game_data.level >= 2) {
+    } else if (pet.game_data.level == 2) {
         if (has_accessory) {
             pet.image_url = string::utf8(PET_LEVEL_2_IMAGE_WITH_GLASSES_URL);
         } else {
             pet.image_url = string::utf8(PET_LEVEL_2_IMAGE_URL);
+        }
+    } else if (pet.game_data.level >= 3) {
+        if (has_accessory) {
+            pet.image_url = string::utf8(PET_LEVEL_3_IMAGE_WITH_GLASSES_URL);
+        } else {
+            pet.image_url = string::utf8(PET_LEVEL_3_IMAGE_URL);
         }
     };
 }
@@ -413,4 +440,10 @@ public fun get_pet_game_data(pet: &Pet): (u64, u64, u8) {
 public fun is_sleeping(pet: &Pet): bool {
     let key = string::utf8(SLEEP_STARTED_AT_KEY);
     dynamic_field::exists_<String>(&pet.id, key)
+}
+
+// === Test-Only Functions ===
+#[test_only]
+public fun init_for_testing(ctx: &mut TxContext) {
+    init(TAMAGOSUI {}, ctx);
 }

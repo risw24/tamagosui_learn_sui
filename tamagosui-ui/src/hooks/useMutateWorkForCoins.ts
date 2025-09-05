@@ -16,7 +16,7 @@ type UseMutateWorkForCoins = {
   petId: string;
 };
 
-export default function useMutateWorkForCoins() {
+export function useMutateWorkForCoins() {
   const currentAccount = useCurrentAccount();
   const { mutateAsync: signAndExecute } = useSignAndExecuteTransaction();
   const suiClient = useSuiClient();

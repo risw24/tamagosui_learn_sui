@@ -16,7 +16,7 @@ type UseMutateWakeUpPet = {
   petId: string;
 };
 
-export default function useMutateWakeUpPet() {
+export function useMutateWakeUpPet() {
   const currentAccount = useCurrentAccount();
   const { mutateAsync: signAndExecute } = useSignAndExecuteTransaction();
   const suiClient = useSuiClient();
