@@ -8,7 +8,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import { queryKeyOwnedPet } from "./useQueryOwnedPet";
-import { PACKAGE_ID } from "@/constants/contract";
+import { CLOCK_ID, MODULE_NAME, PACKAGE_ID } from "@/constants/contract";
 
 const mutationKeyAdoptPet = ["mutate", "adopt-pet"];
 
@@ -29,8 +29,8 @@ export function useMutateAdoptPet() {
 
       const tx = new Transaction();
       tx.moveCall({
-        target: `${PACKAGE_ID}::tamagosui::adopt_pet`,
-        arguments: [tx.pure.string(name), tx.object("0x6")],
+        target: `${PACKAGE_ID}::${MODULE_NAME}::adopt_pet`,
+        arguments: [tx.pure.string(name), tx.object(CLOCK_ID)],
       });
 
       const result = await signAndExecute({ transaction: tx });

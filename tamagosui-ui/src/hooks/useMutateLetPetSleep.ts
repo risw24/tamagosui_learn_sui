@@ -8,7 +8,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import { queryKeyOwnedPet } from "./useQueryOwnedPet";
-import { PACKAGE_ID } from "@/constants/contract";
+import { CLOCK_ID, MODULE_NAME, PACKAGE_ID } from "@/constants/contract";
 
 const mutateKeyLetPetSleep = ["mutate", "let-pet-sleep"];
 
@@ -29,8 +29,8 @@ export function useMutateLetPetSleep() {
 
       const tx = new Transaction();
       tx.moveCall({
-        target: `${PACKAGE_ID}::tamagosui::let_pet_sleep`,
-        arguments: [tx.object(petId), tx.object("0x6")],
+        target: `${PACKAGE_ID}::${MODULE_NAME}::let_pet_sleep`,
+        arguments: [tx.object(petId), tx.object(CLOCK_ID)],
       });
 
       const { digest } = await signAndExecute({ transaction: tx });

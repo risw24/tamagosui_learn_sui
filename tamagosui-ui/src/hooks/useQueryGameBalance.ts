@@ -3,11 +3,11 @@ import { bcs } from "@mysten/bcs";
 import { Transaction } from "@mysten/sui/transactions";
 import { useQuery } from "@tanstack/react-query";
 
-import { PACKAGE_ID } from "@/constants/contract";
+import { MODULE_NAME, PACKAGE_ID } from "@/constants/contract";
 
 const GameBalanceBCS = bcs.struct("GameBalance", {
   max_stat: bcs.u8(),
-  
+
   feed_coins_cost: bcs.u64(),
   feed_experience_gain: bcs.u64(),
   feed_hunger_gain: bcs.u8(),
@@ -43,7 +43,7 @@ export function useQueryGameBalance() {
 
       const tx = new Transaction();
       tx.moveCall({
-        target: `${PACKAGE_ID}::tamagosui::get_game_balance`,
+        target: `${PACKAGE_ID}::${MODULE_NAME}::get_game_balance`,
       });
 
       // Dev inspect the transaction to read the return value without executing it on-chain

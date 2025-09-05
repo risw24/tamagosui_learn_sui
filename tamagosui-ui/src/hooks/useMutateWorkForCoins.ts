@@ -8,7 +8,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import { queryKeyOwnedPet } from "./useQueryOwnedPet";
-import { PACKAGE_ID } from "@/constants/contract";
+import { MODULE_NAME, PACKAGE_ID } from "@/constants/contract";
 
 const mutateKeyWorkForCoins = ["mutate", "work-for-coins"];
 
@@ -29,7 +29,7 @@ export function useMutateWorkForCoins() {
 
       const tx = new Transaction();
       tx.moveCall({
-        target: `${PACKAGE_ID}::tamagosui::work_for_coins`,
+        target: `${PACKAGE_ID}::${MODULE_NAME}::work_for_coins`,
         arguments: [tx.object(petId)],
       });
 

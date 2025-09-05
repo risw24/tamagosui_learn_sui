@@ -8,7 +8,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import { queryKeyOwnedPet } from "./useQueryOwnedPet";
-import { PACKAGE_ID } from "@/constants/contract";
+import { MODULE_NAME, PACKAGE_ID } from "@/constants/contract";
 import { queryKeyOwnedAccessories } from "./useQueryOwnedAccessories";
 
 const mutateKeyMintAccessory = ["mutate", "mint-accessory"];
@@ -26,7 +26,7 @@ export function useMutateMintAccessory() {
 
       const tx = new Transaction();
       tx.moveCall({
-        target: `${PACKAGE_ID}::tamagosui::mint_accessory`,
+        target: `${PACKAGE_ID}::${MODULE_NAME}::mint_accessory`,
       });
 
       const { digest } = await signAndExecute({ transaction: tx });

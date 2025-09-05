@@ -1,7 +1,7 @@
 import { useCurrentAccount, useSuiClient } from "@mysten/dapp-kit";
 import { useQuery } from "@tanstack/react-query";
 
-import { PACKAGE_ID } from "@/constants/contract";
+import { MODULE_NAME, PACKAGE_ID } from "@/constants/contract";
 import { normalizeSuiPetObject } from "@/lib/utils";
 
 export const queryKeyOwnedPet = (address?: string) => {
@@ -21,7 +21,7 @@ export function useQueryOwnedPet() {
       // First, get the main pet object
       const petResponse = await suiClient.getOwnedObjects({
         owner: currentAccount.address,
-        filter: { StructType: `${PACKAGE_ID}::tamagosui::Pet` },
+        filter: { StructType: `${PACKAGE_ID}::${MODULE_NAME}::Pet` },
         options: { showContent: true },
       });
       if (petResponse.data.length === 0) return null;

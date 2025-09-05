@@ -8,7 +8,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import { queryKeyOwnedPet } from "./useQueryOwnedPet";
-import { PACKAGE_ID } from "@/constants/contract";
+import { MODULE_NAME, PACKAGE_ID } from "@/constants/contract";
 
 const mutateKeyCheckAndLevelUp = ["mutate", "check-and-level-up"];
 
@@ -29,7 +29,7 @@ export function useMutateCheckAndLevelUp() {
 
       const tx = new Transaction();
       tx.moveCall({
-        target: `${PACKAGE_ID}::tamagosui::check_and_level_up`,
+        target: `${PACKAGE_ID}::${MODULE_NAME}::check_and_level_up`,
         arguments: [tx.object(petId)],
       });
 

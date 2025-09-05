@@ -8,7 +8,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import { queryKeyOwnedPet } from "./useQueryOwnedPet";
-import { PACKAGE_ID } from "@/constants/contract";
+import { MODULE_NAME, PACKAGE_ID } from "@/constants/contract";
 import { queryKeyEquippedAccessory } from "./useQueryEquippedAccessory";
 import { queryKeyOwnedAccessories } from "./useQueryOwnedAccessories";
 
@@ -31,7 +31,7 @@ export function UseMutateUnequipAccessory() {
 
       const tx = new Transaction();
       tx.moveCall({
-        target: `${PACKAGE_ID}::tamagosui::unequip_accessory`,
+        target: `${PACKAGE_ID}::${MODULE_NAME}::unequip_accessory`,
         arguments: [tx.object(petId)],
       });
 

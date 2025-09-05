@@ -8,7 +8,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import { queryKeyOwnedPet } from "./useQueryOwnedPet";
-import { PACKAGE_ID } from "@/constants/contract";
+import { MODULE_NAME, PACKAGE_ID } from "@/constants/contract";
 
 const mutateKeyPlayWithPet = ["mutate", "play-with-pet"];
 
@@ -29,7 +29,7 @@ export function useMutatePlayWithPet() {
 
       const tx = new Transaction();
       tx.moveCall({
-        target: `${PACKAGE_ID}::tamagosui::play_with_pet`,
+        target: `${PACKAGE_ID}::${MODULE_NAME}::play_with_pet`,
         arguments: [tx.object(petId)],
       });
 
