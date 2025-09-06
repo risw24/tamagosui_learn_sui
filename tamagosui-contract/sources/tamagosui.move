@@ -56,6 +56,11 @@ public struct GameBalance has copy, drop {
 
     // Level settings
     exp_per_level: u64,
+
+    // Watch TV
+    watch_tv_energy_gain: u8,
+    watch_tv_happiness_gain: u8,
+    watch_tv_experience_gain: u64,
 }
 
 fun get_game_balance(): GameBalance {
@@ -87,6 +92,11 @@ fun get_game_balance(): GameBalance {
         
         // Level
         exp_per_level: 100,
+
+        // Watch TV
+        watch_tv_energy_gain: 10,
+        watch_tv_happiness_gain: 20,
+        watch_tv_experience_gain: 15
     }
 }
 
@@ -325,6 +335,27 @@ public entry fun wake_up_pet(pet: &mut Pet, clock: &Clock) {
     update_pet_image(pet);
 
     emit_action(pet, b"woke_up");
+}
+
+public entry fun watch_tv(pet: &mut Pet) {
+    assert!(!is_sleeping(pet), E_PET_IS_ASLEEP);
+
+    let gb = get_game_balance();
+    //assert!(pet.stats.energy >= gb.play_energy_loss, E_PET_TOO_TIRED);
+    //assert!(pet.stats.hunger >= gb.play_hunger_loss, E_PET_TOO_HUNGRY);
+
+    pet.game_data.experience = pet.game_data.experience + gb.watch_tv_experience_gain;
+    pet.stats.energy = if (pet.stats.energy + gb.watch_tv_energy_gain > gb.max_stat) 
+        gb.max_stat 
+    else 
+        pet.stats.energy + gb.watch_tv_energy_gain;
+
+    pet.stats.happiness = if (pet.stats.happiness + gb.watch_tv_happiness_gain > gb.max_stat) 
+        gb.max_stat 
+    else 
+        pet.stats.happiness + gb.watch_tv_happiness_gain;
+
+    emit_action(pet, b"watched_tv");
 }
 
 

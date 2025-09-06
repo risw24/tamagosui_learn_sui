@@ -11,6 +11,7 @@ import {
   BriefcaseIcon,
   ZapIcon,
   ChevronUpIcon,
+  Tv,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -37,6 +38,7 @@ import { useMutateFeedPet } from "@/hooks/useMutateFeedPet";
 import { useMutateLetPetSleep } from "@/hooks/useMutateLetPetSleep";
 import { useMutatePlayWithPet } from "@/hooks/useMutatePlayWithPet";
 import { useMutateWakeUpPet } from "@/hooks/useMutateWakeUpPet";
+import { useMutateWatchTv } from "@/hooks/useMutateWatchTv";
 import { useMutateWorkForCoins } from "@/hooks/useMutateWorkForCoins";
 import { useQueryGameBalance } from "@/hooks/useQueryGameBalance";
 
@@ -66,6 +68,10 @@ export default function PetComponent({ pet }: PetDashboardProps) {
     useMutateWakeUpPet();
   const { mutate: mutateLevelUp, isPending: isLevelingUp } =
     useMutateCheckAndLevelUp();
+  
+  const { mutate: mutateWatchTv, isPending: isWatchingTv } = useMutateWatchTv();
+
+  const canWatchTv = !pet.isSleeping;
 
   useEffect(() => {
     setDisplayStats(pet.stats);
@@ -223,6 +229,13 @@ export default function PetComponent({ pet }: PetDashboardProps) {
               isPending={isPlaying}
               label="Play"
               icon={<PlayIcon />}
+            />
+            <ActionButton
+              onClick={() => mutateWatchTv({ petId: pet.id })}
+              disabled={!canWatchTv || isAnyActionPending}
+              isPending={isWatchingTv}
+              label="Watch TV"
+              icon={<Tv />} // bisa ganti icon lain
             />
             <div className="col-span-2">
               <ActionButton
