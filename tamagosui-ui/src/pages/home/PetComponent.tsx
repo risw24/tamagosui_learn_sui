@@ -12,6 +12,7 @@ import {
   ZapIcon,
   ChevronUpIcon,
   Tv,
+  Sun,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -39,6 +40,7 @@ import { useMutateLetPetSleep } from "@/hooks/useMutateLetPetSleep";
 import { useMutatePlayWithPet } from "@/hooks/useMutatePlayWithPet";
 import { useMutateWakeUpPet } from "@/hooks/useMutateWakeUpPet";
 import { useMutateWatchTv } from "@/hooks/useMutateWatchTv";
+import { useMutateMorningRoutine } from "@/hooks/useMutateMorningRoutine";
 import { useMutateWorkForCoins } from "@/hooks/useMutateWorkForCoins";
 import { useQueryGameBalance } from "@/hooks/useQueryGameBalance";
 
@@ -70,6 +72,9 @@ export default function PetComponent({ pet }: PetDashboardProps) {
     useMutateCheckAndLevelUp();
   
   const { mutate: mutateWatchTv, isPending: isWatchingTv } = useMutateWatchTv();
+
+  const { mutate: mutateMorningRoutine, isPending: isMorningRoutine } =
+    useMutateMorningRoutine();
 
   const canWatchTv = !pet.isSleeping;
 
@@ -119,6 +124,7 @@ export default function PetComponent({ pet }: PetDashboardProps) {
     isFeeding || isPlaying || isSleeping || isWorking || isLevelingUp;
 
   // These `can...` variables mirror the smart contract's rules (`assert!`) on the client-side.
+  const canMorningRoutine = !pet.isSleeping
   const canFeed =
     !pet.isSleeping &&
     pet.stats.hunger < gameBalance.max_stat &&
@@ -236,6 +242,13 @@ export default function PetComponent({ pet }: PetDashboardProps) {
               isPending={isWatchingTv}
               label="Watch TV"
               icon={<Tv />} // bisa ganti icon lain
+            />
+            <ActionButton
+              onClick={() => mutateMorningRoutine({ petId: pet.id })}
+              disabled={!canMorningRoutine || isAnyActionPending}
+              isPending={isMorningRoutine}
+              label="Morning Routine"
+              icon={<Sun />} // bisa ganti icon lain
             />
             <div className="col-span-2">
               <ActionButton
